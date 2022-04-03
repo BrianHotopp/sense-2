@@ -1,0 +1,24 @@
+{
+"s4_default":{
+    "alignment_type":"s4",
+    "neighbors":5,
+    "args": {
+
+    }
+},
+"global_default":{
+    "alignment_type":"global",
+    "neighbors":5,
+    "args":{
+
+    }
+
+},
+"noise_aware_default":{
+    "alignment_type":"noise_aware",
+    "neighbors":5,
+    "args":{
+
+    }
+}
+}
