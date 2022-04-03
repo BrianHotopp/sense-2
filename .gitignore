@@ -1,0 +1,50 @@
+venv/
+# local env files
+.env.local
+.env.*.local
+__pycache__/
+# exclude corpora and artifacts from embedding generation
+# include the metadata as an example for users
+app/preprocessing/generate_embeddings/corpora/
+app/preprocessing/generate_embeddings/embeddings/
+app/preprocessing/generate_embeddings/models/
+app/preprocessing/generate_embeddings/sentencizations/
+app/preprocessing/generate_embeddings/tokenizations/
+# exclude artifacts from example generation
+app/preprocessing/generate_examples/examples/
+# exclude artifacts from embedding generation test cases
+# we want to include the corpora and metadata so the tests can be run
+test/preprocessing/generate_embeddings/test_data/embeddings/
+test/preprocessing/generate_embeddings/test_data/models
+test/preprocessing/generate_embeddings/test_data/sentencizations
+test/preprocessing/generate_embeddings/test_data/tokenizations
+# exclude artifacts from example generation test cases
+# we want to include the corpora and metadata so the tests can be run
+test/preprocessing/generate_examples/test_data/embeddings/
+test/preprocessing/generate_examples/test_data/examples/
+test/preprocessing/generate_examples/test_data/models
+test/preprocessing/generate_examples/test_data/sentencizations
+test/preprocessing/generate_examples/test_data/tokenizations
+
+
+app/brian-useful.sh
+app/data
+app/uploads
+app/db/demo_app.db
+
+# ignore stuff from the vue app
+.DS_Store
+node_modules/
+/dist/
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw*
