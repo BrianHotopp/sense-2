@@ -492,7 +492,10 @@ def get_context():
             ),
             400,
         )
-    first = d["first"]
+    if d["first"] == "true":
+        first = True
+    elif d["first"] == "false":
+        first = False
     # check if the request has a desired number of neighbors
     if "neighbors" in d:
         n_neighbors = 10
