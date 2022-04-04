@@ -10,7 +10,7 @@ const count = ref(0)
 
 <template>
 <div>
-    <h5>
+    <h5 style="text-align: left">
         Most Shifted Words
     </h5>
     <table class="table table-striped">
@@ -24,7 +24,7 @@ const count = ref(0)
   <tbody>
     <tr v-for="(word, index) in words" :key="index">
       <th scope="row">{{index+1}}</th>
-      <td>{{word[0]}}</td>
+      <td><a href="#" @click="$emit('selectWord', word[0])">{{word[0]}}</a></td>
       <td>{{word[1]}}</td>
     </tr>
   </tbody>
