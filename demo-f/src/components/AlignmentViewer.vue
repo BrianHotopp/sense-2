@@ -32,7 +32,7 @@ onMounted(() => {
     .then((data) => {
       // set the embeddings to the data
       top_n_words.value = data.shifted_words;
-      selected_word.value = data.shifted_words[0].word;
+      selected_word.value = data.shifted_words[0][0];
     })
     .then(() => {
       // fetch the neighbors of the selected word

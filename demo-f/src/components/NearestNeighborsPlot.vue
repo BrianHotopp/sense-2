@@ -4,7 +4,7 @@ const props = defineProps(
     ["word", "neighborWords", "neighborCoords"]
 )
 console.log(props.neighborCoords) 
-const tdata = props.neighborCoords.map((v, i)=>v.concat(props.neighborWords[i].neighbor))
+const tdata = props.neighborCoords.map((v, i)=>v.concat(props.neighborWords[i][0]))
 const option = ref(
   {
   xAxis: {},
