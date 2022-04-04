@@ -174,7 +174,7 @@ def upload_file():
         s_path = Path(app.config['SCRUBBED_FOLDER']) / s_filename
         embed.initial_scrub(f_path, s_path)
         # insert dataset_name, dataset_description, f_path, and s_path into the database
-        dataset_id = write_db_ret_last("INSERT INTO plaintexts (name, description, p_path, s_path) VALUES (?, ?, ?)", (dataset_name, dataset_description, str(f_path), str(s_path)))
+        dataset_id = write_db_ret_last("INSERT INTO plaintexts (name, description, p_path, s_path) VALUES (?, ?, ?, ?)", (dataset_name, dataset_description, str(f_path), str(s_path)))
         # get id of the dataset
         return jsonify({'message': 'File successfully uploaded', "id": dataset_id}), 201
     return jsonify({'message': 'Allowed file types are txt'}), 400
