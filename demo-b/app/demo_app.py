@@ -1,31 +1,52 @@
 from ctypes import alignment
 import time
-from tkinter import W
 import uuid
-from flask import Flask, request, jsonify, current_app, session, g
-import os
+from flask import Flask, request, jsonify, current_app, g
 import argparse
 import numpy as np
 import pickle
-from pyparsing import Word
-from scipy.spatial.distance import cosine
 from sklearn.decomposition import PCA
 import json
 import sqlite3
+import app.preprocessing.generate_embeddings.occurrences as occ
 import app.preprocessing.generate_embeddings.embed as embed
 from app.preprocessing.generate_examples.alignment.align import Alignment
 from preprocessing.WordVectors import WordVectors
-from werkzeug.utils import secure_filename
 from flask_cors import CORS
 from pathlib import Path
 
 DATABASE = "app/db/demo_app.db"
 UPLOAD_FOLDER = "app/uploads"
 SCRUBBED_FOLDER = "app/scrubbed"
+OCCURRENCES_FOLDER = "app/occurrences"
+EMBEDDINGS_FOLDER = "app/embeddings"
+ALIGNMENTS_FOLDER = "app/alignments"
+TOKENIZED_FOLDER = "app/tokenized"
 ALLOWED_EXTENSIONS = set(["txt"])
 
 sqlite3.register_adapter(np.float64, float)
-
+def clean_start():
+    # reset the database
+    init_db()
+    # Delete all files in the uploads folder
+    for file in Path(UPLOAD_FOLDER).glob("*"):
+        file.unlink()
+    # Delete all files in the scrubbed folder
+    for file in Path(SCRUBBED_FOLDER).glob("*"):
+        file.unlink()
+    # Delete all files in the occurrences folder
+    for file in Path(OCCURRENCES_FOLDER).glob("*"):
+        file.unlink()
+    # Delete all files in the embeddings folder
+    for file in Path(EMBEDDINGS_FOLDER).glob("*"):
+        file.unlink()
+    # Delete all files in the alignments folder
+    for file in Path(ALIGNMENTS_FOLDER).glob("*"):
+        file.unlink()
+    # Delete all files in the tokenized folder
+    for file in Path(TOKENIZED_FOLDER).glob("*"):
+        file.unlink()
+    
 
 def allowed_file(filename):
     """
@@ -93,18 +114,16 @@ def query_db(query, args=(), one=False):
     return (rv[0] if rv else None) if one else rv
 
 
-def fetch_alignment_configs():
-    """
-    return premade alignment configs
-    """
-
-
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["SCRUBBED_FOLDER"] = SCRUBBED_FOLDER
+app.config["OCCURRENCES_FOLDER"] = OCCURRENCES_FOLDER 
+app.config["EMBEDDINGS_FOLDER"] = EMBEDDINGS_FOLDER
+app.config["ALIGNMENTS_FOLDER"] = ALIGNMENTS_FOLDER
+app.config["TOKENIZED_FOLDER"] = TOKENIZED_FOLDER 
 CORS(app, resources={r"/*": {"origins": "*"}})
-# init_db()
-
+# uncomment this line to reset the db on app start
+#clean_start()
 
 @app.teardown_appcontext
 def close_connection(exception):
@@ -137,7 +156,7 @@ def get_all_embeddings():
 @app.route("/getEmbeddings", methods=["POST"])
 def get_embeddings():
     """
-    return embeddings
+    return embeddings for a given plaintext
     """
     data = request.get_json()
     # check if the request has a pt_id
@@ -171,8 +190,7 @@ def upload_file():
     if "description" not in d:
         return jsonify({"message": "No dataset description in the request"}), 400
     dataset_description = d["description"]
-    # if user does not select file, browser also
-    # submit an empty part without filename
+    # if user does not select file, browser also submits an empty part without filename
     if file.filename == "":
         return jsonify({"message": "No file selected for uploading"}), 400
     if file and allowed_file(file.filename):
@@ -184,14 +202,27 @@ def upload_file():
         # generate random scrub filename
         s_filename = Path(str(uuid.uuid4()) + ".txt")
         s_path = Path(app.config["SCRUBBED_FOLDER"]) / s_filename
+        # scrub and write to s_path
         embed.initial_scrub(f_path, s_path)
-        # insert dataset_name, dataset_description, f_path, and s_path into the database
+        # tokenize the scrubbed file and save the tokenized copy
+        # generate random tokenized filename
+        t_filename = Path(str(uuid.uuid4()) + ".txt")
+        t_path = Path(app.config["TOKENIZED_FOLDER"]) / t_filename
+        # tokenize and write to t_path
+        embed.initial_tokenize(s_path, t_path)
+        # generate occurrences
+        occ_filename = Path(str(uuid.uuid4()) + ".txt")
+        occ_path = Path(app.config["OCCURRENCES_FOLDER"]) / occ_filename
+        occs = occ.get_occurrences(t_path)
+        # pickle dump occs to occ_path
+        with open(occ_path, "wb+") as f:
+            pickle.dump(occs, f)
+        # insert dataset_name, dataset_description, f_path, s_path, t_path, and occ_path into the database
         dataset_id = write_db_ret_last(
-            "INSERT INTO plaintexts (name, description, p_path, s_path) VALUES (?, ?, ?, ?)",
-            (dataset_name, dataset_description, str(f_path), str(s_path)),
+            "INSERT INTO plaintexts (name, description, p_path, s_path, t_path, occ_path) VALUES (?, ?, ?, ?, ?, ?)",
+            (dataset_name, dataset_description, str(f_path), str(s_path), str(t_path), str(occ_path)),
         )
-        # get id of the dataset
-        return jsonify({"message": "File successfully uploaded", "id": dataset_id}), 201
+        return jsonify({"message": "File successfully uploaded and indexed", "id": dataset_id}), 201
     return jsonify({"message": "Allowed file types are txt"}), 400
 
 
@@ -218,30 +249,24 @@ def generate_embedding():
     e_name = d["name"]
     e_description = d["description"]
     # if the provided file id is not in the database
-    if query_db("SELECT * FROM plaintexts WHERE id = ?", (pt_id,), one=True) is None:
+    pt = query_db("SELECT t_path FROM plaintexts WHERE id = ?", (pt_id,), one=True)
+    if pt is None:
         return jsonify({"message": "Invalid file id"}), 400
-    # get the path to the plaintext from the database
-    pt_p = query_db("SELECT s_path FROM plaintexts WHERE id = ?", (pt_id,), one=True)[
-        "s_path"
-    ]
+    # get the path to the tokenized plaintext from the database response
+    pt_p = pt["t_path"]
     pt_po = Path(pt_p)
     # generate the embedding
+    print("opening file at " + str(pt_po))
     wv = embed.generate_embedding(pt_po)
+    # generate a random filename for the embedding
+    e_fn = Path(str(uuid.uuid4()) + ".txt")
+    e_path = Path(app.config["EMBEDDINGS_FOLDER"]) / e_fn
+    wv.to_file(e_path)
     # create entry in embeddings for the embedding, return the id
     e_id = write_db_ret_last(
-        "INSERT INTO embeddings (name, description, pt_id) VALUES (?, ?, ?)",
-        (e_name, e_description, pt_id),
+        "INSERT INTO embeddings (name, description, pt_id, wv_path) VALUES (?, ?, ?, ?)",
+        (e_name, e_description, pt_id, str(e_path)),
     )
-
-    # add the vectors of wv to the database
-    for word in wv.get_words():
-        # serialize the vector
-        v = pickle.dumps(wv.get_vector(word))
-        write_db(
-            "INSERT INTO e_vectors (e_id, word, vector) VALUES (?, ?, ?)",
-            (e_id, word, v),
-        )
-
     return jsonify({"message": "Embedding generated", "id": e_id}), 201
 
 
@@ -262,63 +287,34 @@ def generate_alignment():
     if e1_id == e2_id:
         return jsonify({"message": "Cannot align embeddings with themselves"}), 400
     # if the provided e1_id is not in the database
-    if query_db("SELECT * FROM embeddings WHERE id = ?", (e1_id,), one=True) is None:
+    e1 = query_db("SELECT wv_path FROM embeddings WHERE id = ?", (e1_id,), one=True)
+    if e1 is None:
         return jsonify({"message": f"Invalid embedding id: {e1_id}"}), 400
+    e1wvp = Path(e1["wv_path"])
     # if the provided e2_id is not in the database
-    if query_db("SELECT * FROM embeddings WHERE id = ?", (e2_id,), one=True) is None:
+    e2 = query_db("SELECT wv_path FROM embeddings WHERE id = ?", (e2_id,), one=True)
+    if e2 is None:
         return jsonify({"message": f"Invalid embedding id: {e2_id}"}), 400
-    # get the words and vectors for the first alignment
-    r = query_db("SELECT word, vector FROM e_vectors WHERE e_id = ?", (e1_id,))
-    words1 = [x["word"] for x in r]
-    vectors1 = np.array([pickle.loads(x["vector"]) for x in r])
+    e2wvp = Path(e2["wv_path"])
+    # get the wv object for the first embedding
+    wv1 = WordVectors.from_file(e1wvp)
+    # get the wv object for the second embedding
+    wv2 = WordVectors.from_file(e2wvp)
     # get the words and vectors for the second alignment
-    r = query_db("SELECT word, vector FROM e_vectors WHERE e_id = ?", (e2_id,))
-    words2 = [x["word"] for x in r]
-    vectors2 = np.array([pickle.loads(x["vector"]) for x in r])
-    # load into the WordVector object
-    wv1 = WordVectors(words1, vectors1)
-    wv2 = WordVectors(words2, vectors2)
     # generate the alignment (computes the two alignment matrices, the shifts, and the distances)
     a = Alignment.from_wv_and_config(wv1, wv2, config)
+    # generate a random filename for the alignment
+    a_fn = Path(str(uuid.uuid4()) + ".pickle")
+    a_path = Path(app.config["ALIGNMENTS_FOLDER"]) / a_fn
+    # dump the alignment to a_path
+    with open(a_path, "wb") as f:
+        pickle.dump(a, f)
     # create entry in alignments for the alignment, return the id
     a_id = write_db_ret_last(
-        "INSERT INTO alignments (name, description, e1_id, e2_id) VALUES (?, ?, ?, ?)",
-        (name, description, e1_id, e2_id),
+        "INSERT INTO alignments (name, description, e1_id, e2_id, a_path) VALUES (?, ?, ?, ?, ?)",
+        (name, description, e1_id, e2_id, str(a_path)),
     )
-    # write the vectors in a into the database, along with the shifts and dists
-    # print how many words are in the alignment
-    # prepared statement for inserting into the database
-    start = time.time()
-    ps = "INSERT INTO a_vectors (a_id, first, word, vector) VALUES (?, ?, ?, ?)"
-    # get datbase cursor
-    c = get_db().cursor()
-    ps_args = [
-        (a_id, True, a.common[i], pickle.dumps(a.v1[i])) for i in range(len(a.common))
-    ]
-    c.executemany(ps, ps_args)
-    ps_args = [
-        (a_id, False, a.common[i], pickle.dumps(a.v2[i])) for i in range(len(a.common))
-    ]
-    c.executemany(ps, ps_args)
-    # insert into shifts
-    ps = "INSERT INTO shifts (a_id, word, shift) VALUES (?, ?, ?)"
-    ps_args = [(a_id, a.common[i], a.shifts[i]) for i in range(len(a.common))]
-    c.executemany(ps, ps_args)
-    # insert into distances
-    ps = "INSERT INTO dists (a_id, word1, word2, dist) VALUES (?, ?, ?, ?)"
-    ps_args = [
-        (a_id, a.common[i], a.common[j], a.dists[i, j])
-        for i in range(len(a.common))
-        for j in range(len(a.common))
-    ]
-    c.executemany(ps, ps_args)
-    # commit changes
-    get_db().commit()
-    end = time.time()
-    print(f"{len(a.common)} words in alignment, {end-start} seconds")
     return jsonify({"message": "Alignment generated", "id": a_id}), 201
-
-    # get the existing alignments for a pair of embeddings
 
 
 @app.route("/getAlignments", methods=["POST"])
@@ -391,19 +387,80 @@ def get_top_shifted_words():
         return jsonify({"message": "No id provided"}), 400
     a_id = d["id"]
     # if the provided alignment id is not in the database
-    if query_db("SELECT * FROM alignments WHERE id = ?", (a_id,), one=True) is None:
+    r = query_db("SELECT * FROM alignments WHERE id = ?", (a_id,), one=True)
+    if r is None:
         return jsonify({"message": "Invalid alignment id"}), 400
     # check if the request has a desired number of words
     if "num_words" not in d:
         return jsonify({"message": "No number of words provided"}), 400
     num_words = d["num_words"]
     # get the top shifted words
-    r = query_db(
-        "SELECT word, shift FROM shifts WHERE a_id = ? ORDER BY shift DESC LIMIT ?",
-        (a_id, num_words),
-    )
-    return jsonify({"message": "Top shifted words retrieved", "shifted_words": r}), 200
+    a_path = Path(r["a_path"])
+    # load alignment from a_path
+    with open(a_path, "rb") as f:
+        a = pickle.load(f)
+    ts = a.top_shifted_words(num_words)
+    return jsonify({"message": "Top shifted words retrieved", "shifted_words": ts}), 200
 
+@app.route("/getExampleSentences", methods=["POST"])
+def get_example_sentences():
+    """
+    given a word and an alignment id
+    gets sentences from the original plaintexts showcasing
+    semantically dissimilar usage of the word
+    """
+    # get request json
+    d = request.get_json()
+    # check if the request has an id
+    if "id" not in d:
+        return jsonify({"message": "No alignment id provided"}), 400
+    a_id = d["id"]
+    # get the alignment from the database
+    a = query_db("SELECT e1_id, e2_id, a_path FROM alignments WHERE id = ?", (a_id,), one=True)
+    # if the provided alignment id is not in the database
+    if a is None:
+        return jsonify({"message": "Invalid alignment id"}), 400
+    # check if the request has a word
+    if "word" not in d:
+        return jsonify({"message": "No word provided"}), 400
+    word = d["word"]
+    e1_id = a["e1_id"]
+    e2_id = a["e2_id"]
+    a_path = Path(a["a_path"])
+
+    # generate examples
+    # load alignment from disk
+    with open(a_path, "rb") as f:
+        al = pickle.load(f)
+    # get wordvectors and plaintext ids associated with the specified embeddings
+    pt1_d = query_db(
+        "SELECT pt_id, wv_path FROM embeddings WHERE id = ?", (e1_id,), one=True
+    )
+    pt2_d = query_db(
+        "SELECT pt_id, wv_path FROM embeddings WHERE id = ?", (e2_id,), one=True
+    )
+    pt1_id = pt1_d["pt_id"]
+    pt2_id = pt2_d["pt_id"]
+    e1_v_po = Path(pt1_d["wv_path"])
+    e2_v_po = Path(pt2_d["wv_path"])
+    # get the path to the scrubbed plaintext and occs file from the database (for pt1)
+    r = query_db("SELECT s_path, occ_path FROM plaintexts WHERE id = ?", (pt1_id,), one=True)
+    occ1_po = Path(r["occ_path"])
+    s1_po = Path(r["s_path"])
+    # get the path to the scrubbed plaintext and occs file from the database (for pt2)
+    r = query_db("SELECT s_path, occ_path FROM plaintexts WHERE id = ?", (pt2_id,), one=True)
+    occ2_po = Path(r["occ_path"])
+    s2_po = Path(r["s_path"])
+    # load the occs files from disk
+    with open(occ1_po, "rb") as f:
+        occs1 = pickle.load(f)
+    with open(occ2_po, "rb") as f:
+        occs2 = pickle.load(f)
+    # load the wv objects for both embeddings from disk
+    wv1 = WordVectors.from_file(e1_v_po)
+    wv2 = WordVectors.from_file(e2_v_po)
+    sents = Alignment.get_example_sentences(word, occs1, occs2, s1_po, s2_po, al.Q, wv1, wv2)
+    return jsonify({"message": "Example sentences retrieved", "sentences": sents}), 200
 
 @app.route("/getContext", methods=["POST"])
 def get_context():
@@ -418,7 +475,8 @@ def get_context():
     # get the alignment id
     a_id = d["a_id"]
     # check if the alignment id is valid
-    if query_db("SELECT * FROM alignments WHERE id = ?", (a_id,), one=True) is None:
+    db_r = query_db("SELECT * FROM alignments WHERE id = ?", (a_id,), one=True)
+    if db_r is None:
         return jsonify({"message": "Invalid alignment id"}), 400
     # check if the request has a word
     if "word" not in d:
@@ -436,49 +494,20 @@ def get_context():
         )
     first = d["first"]
     # check if the request has a desired number of neighbors
-    if "neighbors" not in d:
+    if "neighbors" in d:
         n_neighbors = 10
-    else:
-        n_neighbors = d["neighbors"]
-    if first:
-        # our target word is in the first context
-        # get the closest n neighbors in the second context
-        r = query_db(
-            "SELECT word2 as neighbor, dist FROM dists WHERE a_id = ? AND word1 = ? ORDER BY dist ASC LIMIT ?",
-            (a_id, word, n_neighbors),
-        )
-    else:
-        # our target word is in the second context
-        # get the closest n neighbors in the first context
-        r = query_db(
-            "SELECT word1 as neighbor, dist FROM dists WHERE a_id = ? AND word2 = ? ORDER BY dist ASC LIMIT ?",
-            (a_id, word, n_neighbors),
-        )
-    # get the vectors for the neighbors
-    v = []
-    for i in range(len(r)):
-        if first:
-            vecb = query_db(
-                "SELECT vector FROM a_vectors WHERE a_id = ? AND first = ? AND word = ?",
-                (a_id, False, r[i]["neighbor"]),
-                one=True,
-            )
-            # unpack the vector
-            v.append(pickle.loads(vecb["vector"]))
-        else:
-            vecb = query_db(
-                "SELECT vector FROM a_vectors WHERE a_id = ? AND first = ? AND word = ?",
-                (a_id, True, r[i]["neighbor"]),
-                one=True,
-            )
-            # unpack the vector
-            v.append(pickle.loads(vecb["vector"]))
-    # return the neighbors and their vectors
-    v = np.array(v)
+
+    al_p = Path(db_r["a_path"])
+    # load pickled alignment from disk
+    with open(al_p, "rb") as f:
+        a = pickle.load(f)
+    words, distances, v = a.get_context(word, first, n_neighbors)
+    # zip words and distances into dict
+    zipped = list(zip(words, distances))
     v_2d = PCA(n_components=2).fit_transform(v)
     return (
         jsonify(
-            {"message": "Context retrieved", "neighbors": r, "vectors": v_2d.tolist()}
+            {"message": "Context retrieved", "neighbors": zipped, "vectors": v_2d.tolist()}
         ),
         200,
     )
