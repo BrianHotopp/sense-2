@@ -20,6 +20,7 @@ from sklearn.metrics import accuracy_score, log_loss
 from scipy.spatial.distance import cosine, euclidean
 import matplotlib.pyplot as plt
 import seaborn as sns
+
 # Local modules
 from ...WordVectors import WordVectors
 from .global_align import GlobalAlignConfig
@@ -30,16 +31,18 @@ tf.random.set_seed(1)
 
 
 class S4AlignConfig:
-    def __init__(self, name = "unnamed"):
+    def __init__(self, name="unnamed"):
         self._name = name
+
     def align(self, wv1, wv2):
         """
         aligns wv1 to wv2 using orthogonal procrustes with anchors chosen by s4
         """
         landmarks, non_landmarks, Q = s4(wv1, wv2)
-        _wv1vec= np.matmul(wv1.vectors, Q)
+        _wv1vec = np.matmul(wv1.vectors, Q)
         _wv1 = WordVectors(wv1.get_words(), _wv1vec)
         return _wv1, wv2, Q
+
 
 def negative_samples(words, size, p=None):
     """
@@ -49,8 +52,8 @@ def negative_samples(words, size, p=None):
     neg_samples = np.random.choice(words, size, p=p)
     return neg_samples
 
-def inject_change_single(wv, w, words, v_a, alpha, replace=False,
-                         max_tries=50):
+
+def inject_change_single(wv, w, words, v_a, alpha, replace=False, max_tries=50):
     """
     Injects change to word w in wv by randomly selecting a word t in wv
     and injecting the sense of t in to w.
@@ -69,8 +72,9 @@ def inject_change_single(wv, w, words, v_a, alpha, replace=False,
     Returns:
             x       -   (np.ndarray) modified vector of w
     """
-    cos_t = cosine(v_a, wv.get_vector(
-        w))  # cosine distance threshold we want to surpass
+    cos_t = cosine(
+        v_a, wv.get_vector(w)
+    )  # cosine distance threshold we want to surpass
     c = 0
     tries = 0
     v_b = np.copy(wv.get_vector(w))
@@ -78,12 +82,13 @@ def inject_change_single(wv, w, words, v_a, alpha, replace=False,
         tries += 1
         selected = np.random.choice(words)  # select word with new sense
         if not replace:
-            b = wv.get_vector(w) + alpha*wv.get_vector(selected)
+            b = wv.get_vector(w) + alpha * wv.get_vector(selected)
             v_b = b
         else:
             v_b = wv.get_vector(selected)
         c = cosine(v_a, v_b)
     return v_b
+
 
 def get_features(x, names=["cos"]):
     """
@@ -99,9 +104,10 @@ def get_features(x, names=["cos"]):
     for i, p in enumerate(x):
         for j, feat in enumerate(names):
             if feat == "cos":
-                x_ = cosine(p[:len(p)//2], p[len(p)//2:])
+                x_ = cosine(p[: len(p) // 2], p[len(p) // 2 :])
                 x_out[i][j] = x_
     return x_out
+
 
 def build_sklearn_model():
     """
@@ -121,30 +127,37 @@ def build_keras_model(dim):
     """
     h1_dim = 100
     h2_dim = 100
-    model = keras.Sequential([
-                             keras.layers.Input(shape=(dim)),
-                             keras.layers.Dense(h1_dim, activation="relu",
-                                                activity_regularizer=keras.regularizers.l2(1e-2)),
-                             # keras.layers.Dense(h2_dim, activation="relu",
-                             #                    activity_regularizer=keras.regularizers.l2(1e-2)),
-                             keras.layers.Dense(1, activation="sigmoid")
-                             ])
-    model.compile(optimizer="rmsprop",
-                  loss="binary_crossentropy",
-                  metrics=["accuracy"])
+    model = keras.Sequential(
+        [
+            keras.layers.Input(shape=(dim)),
+            keras.layers.Dense(
+                h1_dim,
+                activation="relu",
+                activity_regularizer=keras.regularizers.l2(1e-2),
+            ),
+            # keras.layers.Dense(h2_dim, activation="relu",
+            #                    activity_regularizer=keras.regularizers.l2(1e-2)),
+            keras.layers.Dense(1, activation="sigmoid"),
+        ]
+    )
+    model.compile(optimizer="rmsprop", loss="binary_crossentropy", metrics=["accuracy"])
     return model
 
 
-def threshold_crossvalidation(wv1, wv2, iters=100,
-                              n_fold=1,
-                              n_targets=100,
-                              n_negatives=100,
-                              fast=True,
-                              rate=0.5,
-                              t=0.5,
-                              landmarks=None,
-                              t_overlap=1,
-                              debug=False):
+def threshold_crossvalidation(
+    wv1,
+    wv2,
+    iters=100,
+    n_fold=1,
+    n_targets=100,
+    n_negatives=100,
+    fast=True,
+    rate=0.5,
+    t=0.5,
+    landmarks=None,
+    t_overlap=1,
+    debug=False,
+):
     """
     Runs crossvalidation over self-supervised samples, carrying out a model
     selection to determine the best cosine threshold to use in the final
@@ -184,15 +197,14 @@ def threshold_crossvalidation(wv1, wv2, iters=100,
         if len(non_landmarks) > 0:
             targets = np.random.choice(non_landmarks, n_targets)
             # Make targets deterministic
-            #targets = non_landmarks
+            # targets = non_landmarks
         else:
             targets = np.random.choice(wv1.words, n_targets)
 
         for target in targets:
 
             # Simulate semantic change in target word
-            v = inject_change_single(wv2_original, target, wv1.words,
-                                     wv1[target], rate)
+            v = inject_change_single(wv2_original, target, wv1.words, wv1[target], rate)
 
             pos_vectors[target] = v
 
@@ -221,8 +233,7 @@ def threshold_crossvalidation(wv1, wv2, iters=100,
         y_train = train[:, -1].astype(int)
 
         # Calculate cosine distance of training samples
-        x_train = np.array([cosine(wv1[w], sup_vectors[w])
-                           for w in words_train])
+        x_train = np.array([cosine(wv1[w], sup_vectors[w]) for w in words_train])
 
         # t_pool = [0.2, 0.7]
         t_pool = np.arange(0.2, 1, 0.1)
@@ -232,11 +243,11 @@ def threshold_crossvalidation(wv1, wv2, iters=100,
         for t_ in t_pool:
             acc = 0
             for i in range(0, len(x_train), n_fold):
-                x_cv = x_train[i:i+n_fold]
-                y_true = y_train[i:i+n_fold]
+                x_cv = x_train[i : i + n_fold]
+                y_true = y_train[i : i + n_fold]
                 y_hat = x_cv > t_
-                acc += sum(y_hat == y_true)/len(x_cv)
-            acc = acc/(len(x_train)//n_fold)
+                acc += sum(y_hat == y_true) / len(x_cv)
+            acc = acc / (len(x_train) // n_fold)
             if acc > best_acc:
                 best_acc = acc
                 best_t = t_
@@ -244,18 +255,25 @@ def threshold_crossvalidation(wv1, wv2, iters=100,
 
     return best_t
 
-def s4(wv1, wv2, verbose=0, plot=0, cls_model="nn",
-       iters=100,
-       n_targets=10,
-       n_negatives=10,
-       fast=True,
-       rate=0,
-       t=0.5,
-       t_overlap=1,
-       landmarks=None,
-       update_landmarks=True,
-       return_model=False,
-       debug=False):
+
+def s4(
+    wv1,
+    wv2,
+    verbose=0,
+    plot=0,
+    cls_model="nn",
+    iters=100,
+    n_targets=10,
+    n_negatives=10,
+    fast=True,
+    rate=0,
+    t=0.5,
+    t_overlap=1,
+    landmarks=None,
+    update_landmarks=True,
+    return_model=False,
+    debug=False,
+):
     """
     Performs self-supervised learning of semantic change.
     Generates negative samples by sampling from landmarks.
@@ -291,14 +309,16 @@ def s4(wv1, wv2, verbose=0, plot=0, cls_model="nn",
 
     # Define verbose prints
     if verbose == 1:
+
         def verbose_print(*s, end="\n"):
             print(*s, end=end)
+
     elif verbose == 0:
+
         def verbose_print(*s, end="\n"):
             return None
 
-    wv2_original = WordVectors(
-        words=wv2.get_words(), vectors=wv2.vectors.copy())
+    wv2_original = WordVectors(words=wv2.get_words(), vectors=wv2.vectors.copy())
 
     avg_window = 0  # number of iterations to use in running average
 
@@ -308,15 +328,15 @@ def s4(wv1, wv2, verbose=0, plot=0, cls_model="nn",
         # Check if landmarks is initialized
         if landmarks == None:
             wv1, wv2, Q = ga.align(wv1, wv2)  # start from global alignment
-            landmark_dists = [euclidean(u, v)
-                              for u, v in zip(wv1.vectors, wv2.vectors)]
+            landmark_dists = [euclidean(u, v) for u, v in zip(wv1.vectors, wv2.vectors)]
             landmark_args = np.argsort(landmark_dists)
-            landmarks = [wv1.get_words()[i]
-                         for i in landmark_args[:int(len(wv1.get_words())*0.5)]]
+            landmarks = [
+                wv1.get_words()[i]
+                for i in landmark_args[: int(len(wv1.get_words()) * 0.5)]
+            ]
             # landmarks = np.random.choice(wv1.words, int(len(wv1)*0.5))
         landmark_set = set(landmarks)
-        non_landmarks = np.array(
-            [w for w in wv1.get_words() if w not in landmark_set])
+        non_landmarks = np.array([w for w in wv1.get_words() if w not in landmark_set])
     else:
         landmark_set = set(landmarks)
         non_landmarks = [w for w in wv1.get_words() if w not in landmark_set]
@@ -327,7 +347,7 @@ def s4(wv1, wv2, verbose=0, plot=0, cls_model="nn",
     wv1, wv2, Q = ga.align(wv1, wv2)
     if cls_model == "nn":
         print("dim is", wv1.get_vector_dimension())
-        model = build_keras_model(wv1.get_vector_dimension()*2)
+        model = build_keras_model(wv1.get_vector_dimension() * 2)
     elif cls_model == "svm_auto" or cls_model == "svm_features":
         model = build_sklearn_model()  # get SVC
 
@@ -362,15 +382,16 @@ def s4(wv1, wv2, verbose=0, plot=0, cls_model="nn",
         if len(non_landmarks) > 0:
             targets = np.random.choice(non_landmarks, n_targets)
             # Make targets deterministic
-            #targets = non_landmarks
+            # targets = non_landmarks
         else:
             targets = np.random.choice(wv1.words, n_targets)
 
         for target in targets:
 
             # Simulate semantic change in target word
-            v = inject_change_single(wv2_original, target, wv1.get_words(),
-                                     wv1[target], rate)
+            v = inject_change_single(
+                wv2_original, target, wv1.get_words(), wv1[target], rate
+            )
 
             pos_vectors[target] = v
 
@@ -397,8 +418,7 @@ def s4(wv1, wv2, verbose=0, plot=0, cls_model="nn",
         words_train = train[:, 0]
         y_train = train[:, -1].astype(int)
 
-        x_train = np.array([np.append(wv1[w], sup_vectors[w])
-                           for w in words_train])
+        x_train = np.array([np.append(wv1[w], sup_vectors[w]) for w in words_train])
 
         # Append history
         landmark_hist.append(len(landmarks))
@@ -407,19 +427,19 @@ def s4(wv1, wv2, verbose=0, plot=0, cls_model="nn",
         v1_out = np.array([wv1[w] for w in non_landmarks])
         v2_out = np.array([wv2_original[w] for w in non_landmarks])
 
-        alignment_loss = np.linalg.norm(v1_land-v2_land)**2/len(v1_land)
+        alignment_loss = np.linalg.norm(v1_land - v2_land) ** 2 / len(v1_land)
         alignment_loss_hist.append(alignment_loss)
-        cumulative_alignment_hist.append(
-            np.mean(alignment_loss_hist[-avg_window:]))
+        cumulative_alignment_hist.append(np.mean(alignment_loss_hist[-avg_window:]))
 
         # out loss
-        alignment_out_loss = np.linalg.norm(v1_out-v2_out)**2/len(v1_out)
+        alignment_out_loss = np.linalg.norm(v1_out - v2_out) ** 2 / len(v1_out)
         alignment_out_hist.append(alignment_out_loss)
         cumulative_out_hist.append(np.mean(alignment_out_hist[-avg_window:]))
 
         # all loss
         alignment_all_loss = np.linalg.norm(
-            wv1.vectors-wv2_original.vectors)**2/len(wv1.words)
+            wv1.vectors - wv2_original.vectors
+        ) ** 2 / len(wv1.words)
         alignment_all_hist.append(alignment_all_loss)
 
         if debug:
@@ -435,8 +455,7 @@ def s4(wv1, wv2, verbose=0, plot=0, cls_model="nn",
         if cls_model == "nn":
             print("training")
             print("dset size:", len(x_train))
-            history = model.train_on_batch(
-                x_train, y_train, reset_metrics=False)
+            history = model.train_on_batch(x_train, y_train, reset_metrics=False)
             # history = model.fit(x_train, y_train, epochs=5, verbose=0)
             # history = [history.history["loss"][0]]
         elif cls_model == "svm_auto":
@@ -447,15 +466,16 @@ def s4(wv1, wv2, verbose=0, plot=0, cls_model="nn",
             x_train_ = get_features(x_train)  # retrieve manual features
             model.fit(x_train_, y_train)
             pred_train = model.predict_proba(x_train_)
-            y_hat_t = (pred_train[:, 0] > 0.5)
+            y_hat_t = pred_train[:, 0] > 0.5
             acc_t = accuracy_score(y_train, y_hat_t)
             history = [log_loss(y_train, pred_train), acc_t]
 
         loss_hist.append(history[0])
 
         # Apply model on original data to select landmarks
-        x_real = np.array([np.append(u, v) for u, v
-                           in zip(wv1.vectors, wv2_original.vectors)])
+        x_real = np.array(
+            [np.append(u, v) for u, v in zip(wv1.vectors, wv2_original.vectors)]
+        )
         if cls_model == "nn":
             predict_real = model.predict(x_real)
         elif cls_model == "svm_auto":
@@ -466,32 +486,43 @@ def s4(wv1, wv2, verbose=0, plot=0, cls_model="nn",
             predict_real = model.predict_proba(x_real_)
             predict_real = predict_real[:, 1]
 
-        y_predict = (predict_real > t)
+        y_predict = predict_real > t
 
         if update_landmarks:
-            landmarks = [wv1.get_word(i)
-                         for i in range(len(wv1.words)) if predict_real[i] < t]
-            non_landmarks = [wv1.get_word(i)
-                             for i in range(len(wv1.words)) if predict_real[i] > t]
+            landmarks = [
+                wv1.get_word(i) for i in range(len(wv1.words)) if predict_real[i] < t
+            ]
+            non_landmarks = [
+                wv1.get_word(i) for i in range(len(wv1.words)) if predict_real[i] > t
+            ]
 
         # Update landmark overlap using Jaccard Index
         isect_ab = set.intersection(prev_landmarks, set(landmarks))
         union_ab = set.union(prev_landmarks, set(landmarks))
-        j_index = len(isect_ab)/len(union_ab)
+        j_index = len(isect_ab) / len(union_ab)
         overlap_hist.append(j_index)
 
         cumulative_overlap_hist.append(
-            np.mean(overlap_hist[-avg_window:]))  # store mean
+            np.mean(overlap_hist[-avg_window:])
+        )  # store mean
 
         prev_landmarks = set(landmarks)
 
-        verbose_print("> %3d | L %4d | l(in): %.2f | l(out): %.2f | loss: %.2f | overlap %.2f | acc: %.2f" %
-                      (iter, len(landmarks), cumulative_alignment_hist[-1],
-                       cumulative_out_hist[-1], history[0], cumulative_overlap_hist[-1], history[1]),
-                      end="\r")
+        verbose_print(
+            "> %3d | L %4d | l(in): %.2f | l(out): %.2f | loss: %.2f | overlap %.2f | acc: %.2f"
+            % (
+                iter,
+                len(landmarks),
+                cumulative_alignment_hist[-1],
+                cumulative_out_hist[-1],
+                history[0],
+                cumulative_overlap_hist[-1],
+                history[1],
+            ),
+            end="\r",
+        )
         ga.landmarks = landmarks
-        wv1, wv2_original, Q = ga.align(
-            wv1, wv2_original)
+        wv1, wv2_original, Q = ga.align(wv1, wv2_original)
 
         # Check if overlap difference is below threhsold
         if np.mean(overlap_hist) > t_overlap:
@@ -512,8 +543,7 @@ def s4(wv1, wv2, verbose=0, plot=0, cls_model="nn",
         plt.xlabel("Iteration")
         plt.legend()
         plt.show()
-        plt.plot(range(iter), cumulative_alignment_hist,
-                 label="in (landmarks)")
+        plt.plot(range(iter), cumulative_alignment_hist, label="in (landmarks)")
         plt.plot(range(iter), cumulative_out_hist, label="out")
         plt.plot(range(iter), alignment_all_hist, label="all")
         plt.ylabel("Alignment loss (MSE)")

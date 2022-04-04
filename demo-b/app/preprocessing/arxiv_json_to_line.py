@@ -18,4 +18,3 @@ with open(args.output, "w") as fout:
     for article in data:
         fout.write("%s\n" % (" ".join(article)))
 print("Done.")
-

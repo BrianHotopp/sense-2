@@ -1,17 +1,20 @@
 import numpy as np
 from multiprocessing import Pool
 import nltk
+
+
 def tok_w_i(il):
     """
     il: tuple, il[0] is the line number, il[1] is the line
-    returns tuple of line number, tokenized line 
+    returns tuple of line number, tokenized line
     """
     return (il[0], nltk.word_tokenize(il[1]))
+
 
 def get_occurrences(file_in, limit=10000, workers=48):
     """
     file_in: path object pointing to the plaintext
-    limit: int - maximum number of lines to record as containing the word of interest 
+    limit: int - maximum number of lines to record as containing the word of interest
     returns: dict(str: set(int)) - dictionary of which lines contain which words
     """
     # read in the lines
@@ -25,6 +28,7 @@ def get_occurrences(file_in, limit=10000, workers=48):
                     if len(occurrences[tok]) < limit:
                         occurrences[tok].add(i)
     return occurrences
+
 
 def get_relevance(occurrences, shared_words):
     """
@@ -42,6 +46,7 @@ def get_relevance(occurrences, shared_words):
                     relevance[line] = 1
     return relevance
 
+
 def get_lines(occurrences, word):
     """
     returns a list of lines that contain the word
@@ -53,6 +58,7 @@ def get_lines(occurrences, word):
     else:
         return set()
 
+
 def _embed_line(line, wv, c, vectors):
     """
     embeds a line in the corpus by adding the vector representations of its words
@@ -63,10 +69,12 @@ def _embed_line(line, wv, c, vectors):
     for word in nltk.word_tokenize(line):
         if word in wv:
             vectors[c] += wv[word]
+
+
 def embed_lines(file_in, line_ind, wv):
     """
     embeds lines in the corpus by adding the vector representations of their words
-    file_in: Path obj file in 
+    file_in: Path obj file in
     line_ind: set of indices of the lines in file_in we should embed
     wv1: WordVectors - word vectors to use
     returns:
@@ -83,8 +91,10 @@ def embed_lines(file_in, line_ind, wv):
             if i in line_ind:
                 _embed_line(line, wv, c, vectors)
                 indices[c] = i
-                c+=1
+                c += 1
     return indices, vectors
+
+
 def line_from_file(file, line_index):
     """
     returns the line at line_index from file
@@ -96,6 +106,8 @@ def line_from_file(file, line_index):
         for i, line in enumerate(f):
             if i == line_index:
                 return line
+
+
 def get_best_lines(pt_path, occurrences, alignment, target):
     """
     get the most "robust" example sentence showcasing semantic dissimilarity
@@ -118,4 +130,3 @@ def get_best_lines(pt_path, occurrences, alignment, target):
     lv2 = embed_lines(lines, alignment.wv2)
     # get the relevance of the lines
     relevance = get_relevance(occurrences, set([target]))
-
