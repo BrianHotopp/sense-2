@@ -3,7 +3,8 @@ create table plaintexts (
     id integer primary key autoincrement,
     name varchar not null,
     description varchar not null,
-    p_path varchar not null
+    p_path varchar not null,
+    s_path varchar not null
 );
 drop table if exists embeddings;
 create table embeddings (
