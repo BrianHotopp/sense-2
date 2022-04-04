@@ -12,15 +12,15 @@ from scipy.spatial.distance import cosine
 from sklearn.decomposition import PCA
 import json
 import sqlite3
-import app.preprocessing.generate_embeddings.embed  as embed
+import app.preprocessing.generate_embeddings.embed  as embed 
 from app.preprocessing.generate_examples.alignment.align import Alignment
 from preprocessing.WordVectors import WordVectors
 from werkzeug.utils import secure_filename
-from preprocessing.generate_sentences import generate_sentence_samples
 from flask_cors import CORS
 from pathlib import Path
 DATABASE = "app/db/demo_app.db"
 UPLOAD_FOLDER = 'app/uploads'
+SCRUBBED_FOLDER = 'app/scrubbed'
 ALLOWED_EXTENSIONS = set(['txt'])
 
 sqlite3.register_adapter(np.float64, float)
@@ -97,6 +97,7 @@ def fetch_alignment_configs():
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['SCRUBBED_FOLDER'] = SCRUBBED_FOLDER 
 CORS(app, resources={r'/*': {'origins': '*'}})
 #init_db()
 
@@ -167,8 +168,13 @@ def upload_file():
         filename = Path(str(uuid.uuid4()) + ".txt")
         f_path = Path(app.config['UPLOAD_FOLDER']) / filename
         file.save(f_path)
-        # insert dataset_name, dataset_description, and f_path into the database
-        dataset_id = write_db_ret_last("INSERT INTO plaintexts (name, description, p_path) VALUES (?, ?, ?)", (dataset_name, dataset_description, str(f_path)))
+        # scrub the file and save the scrubbed copy
+        # generate random scrub filename
+        s_filename = Path(str(uuid.uuid4()) + ".txt")
+        s_path = Path(app.config['SCRUBBED_FOLDER']) / s_filename
+        embed.initial_scrub(f_path, s_path)
+        # insert dataset_name, dataset_description, f_path, and s_path into the database
+        dataset_id = write_db_ret_last("INSERT INTO plaintexts (name, description, p_path, s_path) VALUES (?, ?, ?)", (dataset_name, dataset_description, str(f_path), str(s_path)))
         # get id of the dataset
         return jsonify({'message': 'File successfully uploaded', "id": dataset_id}), 201
     return jsonify({'message': 'Allowed file types are txt'}), 400
@@ -199,12 +205,11 @@ def generate_embedding():
     if query_db("SELECT * FROM plaintexts WHERE id = ?", (pt_id,), one=True) is None:
         return jsonify({'message': 'Invalid file id'}), 400
     # get the path to the plaintext from the database
-    pt_p = query_db("SELECT p_path FROM plaintexts WHERE id = ?", (pt_id,), one=True)['p_path']
+    pt_p = query_db("SELECT s_path FROM plaintexts WHERE id = ?", (pt_id,), one=True)['s_path']
     pt_po = Path(pt_p)
     # generate the embedding
     wv = embed.generate_embedding(pt_po)
     # create entry in embeddings for the embedding, return the id
-
     e_id = write_db_ret_last("INSERT INTO embeddings (name, description, pt_id) VALUES (?, ?, ?)", (e_name, e_description, pt_id))
 
     # add the vectors of wv to the database
@@ -411,11 +416,7 @@ def get_all_alignment_vectors():
     # get all alignment vectors
     r = query_db("SELECT count(word) FROM a_vectors")
     return jsonify({'message': 'All alignment vectors retrieved', 'vectors': r}), 200
-@app.route("/getExampleSentences")
-def get_example_sentences():
-    """
-    gets an example sentence
-    """
+
 
 
 if __name__ == "__main__":
