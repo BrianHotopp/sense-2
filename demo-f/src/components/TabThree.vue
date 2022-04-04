@@ -4,7 +4,6 @@ import { ref, onMounted } from 'vue'
 import AlignmentViewer from './AlignmentViewer.vue'
 defineProps(["alignments"]);
 onMounted(() => {
-  console.log("mounted tab 3");
 });
 
 </script>
