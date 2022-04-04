@@ -12,6 +12,8 @@ venv/
 .env.*.local
 __pycache__/
 
+# ignore large testing files
+demo-b/test/preprocessing/test_data
 # ignores for vue frontend
 node_modules
 dist
