@@ -74,7 +74,7 @@ class Alignment:
         """
         computes the semantic shift for each word in the example
         """
-        # compute row-wise cosine similarity    
+        # compute row-wise cosine similarity
         # time how long it takes
         start = time()
         cosDist = True
@@ -95,7 +95,7 @@ class Alignment:
         # time how long it takes
         start = time()
         # compute pairwise euclidean distance
-        dists = pairwise_distances(v1, v2, metric='euclidean')
+        dists = pairwise_distances(v1, v2, metric="euclidean")
         end = time()
         print("Computing pairwise distances took {} seconds".format(end - start))
         return dists

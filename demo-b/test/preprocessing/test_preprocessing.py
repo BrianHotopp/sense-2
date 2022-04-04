@@ -2,7 +2,11 @@ import unittest
 from pathlib import Path
 
 from app.preprocessing.WordVectors import WordVectors
-from app.preprocessing.generate_embeddings.embed import initial_scrub, generate_embedding
+from app.preprocessing.generate_embeddings.embed import (
+    initial_scrub,
+    generate_embedding,
+)
+
 
 class WordVectorsTest(unittest.TestCase):
     def test_preprocessing(self):
@@ -13,7 +17,9 @@ class WordVectorsTest(unittest.TestCase):
         initial_scrub(in_path, out_path, 48)
         wv = generate_embedding(out_path)
         print(wv.words)
-        assert(True)
+        assert True
         pass
-if __name__ == '__main__':
+
+
+if __name__ == "__main__":
     unittest.main()
