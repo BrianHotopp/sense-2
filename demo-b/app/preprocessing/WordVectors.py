@@ -28,10 +28,14 @@ class WordVectors:
         self.vector_dimension = len(vectors[0])
         self.length = len(self.words)
         # optional intialization transforms
+        self.centered = False
+        self.normalized = False
         if centered:
             self.center()
+            self.centered = True
         if normalized:
             self.normalize()
+            self.normalized = True
     def __len__(self):
         """returns the number of words contained"""
         return len(self.words)
