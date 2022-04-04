@@ -8,8 +8,8 @@ const props = defineProps(
 
 <template>
     <div>
-    <h5>
-           Nearest Neighbors 
+    <h5 style="text-align: left">
+           Nearest Neighbors of {{word}}
     </h5>
     <table class="table table-striped">
   <thead>
@@ -22,7 +22,7 @@ const props = defineProps(
   <tbody>
     <tr v-for="(word, index) in neighborWords" :key="index">
       <th scope="row">{{index+1}}</th>
-      <td>{{word[0]}}</td>
+      <td><a href="#!" @click="$emit('selectWord', word[0])">{{word[0]}}</a></td>
       <td>{{word[1]}}</td>
     </tr>
   </tbody>
