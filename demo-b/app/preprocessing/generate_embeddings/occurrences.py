@@ -11,7 +11,7 @@ def tok_w_i(il):
     return (il[0], nltk.word_tokenize(il[1]))
 
 
-def get_occurrences(file_in, limit=10000, workers=48):
+def get_occurrences(file_in, limit=2000, workers=48):
     """
     file_in: path object pointing to the plaintext
     limit: int - maximum number of lines to record as containing the word of interest
@@ -78,3 +78,17 @@ def line_from_file(file, line_index):
         for i, line in enumerate(f):
             if i == line_index:
                 return line
+def lines_from_file(f_p, line_indices):
+    """
+    returns the lines specified by line_indices from the file pointed to by f_p
+    f_p: path object
+    line_indices: list of indices to return, ascending order
+    """
+    # todo this function is broken
+    lines = [""] * len(line_indices)
+    with f_p.open() as f:
+        for i, line in enumerate(f):
+            if i in line_indices:
+                l = line_indices.index(i)
+                lines[l] = line
+    return lines
