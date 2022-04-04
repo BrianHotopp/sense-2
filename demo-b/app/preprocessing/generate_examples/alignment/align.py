@@ -31,6 +31,9 @@ class Alignment:
         self.dists = dists
         self.Q = Q
     def top_shifted_words(self, num_words=10):
+        """
+        returns the top num_words shifted words in the alignment
+        """
         # get the top shifted words
         num_words = min(num_words, len(self.shifts)-1)
         indices = np.argpartition(self.shifts, -1*num_words)[-1*num_words:]
