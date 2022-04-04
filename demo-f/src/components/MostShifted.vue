@@ -10,9 +10,9 @@ const count = ref(0)
 
 <template>
 <div>
-    <h3>
+    <h5>
         Most Shifted Words
-    </h3>
+    </h5>
     <table class="table table-striped">
   <thead>
     <tr>
@@ -24,8 +24,8 @@ const count = ref(0)
   <tbody>
     <tr v-for="(word, index) in words" :key="index">
       <th scope="row">{{index+1}}</th>
-      <td>{{word.word}}</td>
-      <td>{{word.shift}}</td>
+      <td>{{word[0]}}</td>
+      <td>{{word[1]}}</td>
     </tr>
   </tbody>
 </table>
