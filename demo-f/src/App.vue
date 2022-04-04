@@ -16,6 +16,10 @@ const ptexts = ref(null);
 const pts1 = ref(null);
 // selected plaintext 2
 const pts2 = ref(null);
+// selected plaintext 1 name
+const pts1_name = ref(null);
+// selected plaintext 2 name
+const pts2_name = ref(null);
 // all embeddings associated with the selected pt1
 const e_s1 = ref(null);
 // all embeddings associated with the selected pt2
@@ -42,10 +46,7 @@ const tab2ready = computed(() => {
   );
 });
 const tab3ready = computed(() => {
-  console.log("computing if tab 3 ready");
-  console.log("alignments object: ", alignments);
   const r =  alignments.value != null;
-  console.log("tab 3 ready: ", r);
   return r;
 });
 // initial api call
@@ -102,9 +103,6 @@ function tab2hook() {
       // set the embeddings to the data
       e_s2.value = data;
     });
-  console.log("here are the values for p1 embeddings and p2 embeddings");
-  console.log(e_s1);
-  console.log(e_s2);
 }
 function tab3hook() {
   fetch("/api/getAlignments", {
@@ -120,11 +118,7 @@ function tab3hook() {
     .then((res) => res.json())
     .then((data) => {
       // set the alignments to the data alignments
-      console.log("got from server");
-      console.log("data alignments: ", data.alignments);
       alignments.value = data.alignments;
-      console.log("here's the local");
-      console.log(alignments);
 
     });
 }
@@ -314,12 +308,12 @@ const prevDisabled = computed(() => ({
               </div>
             </div>
             <div class="row">
-              <div class="col-6">
+              <!-- <div class="col-6">
                 <button type="button" class="btn btn-success">Success</button>
               </div>
               <div class="col-6">
                 <button type="button" class="btn btn-success">Success</button>
-              </div>
+              </div> -->
             </div>
           </div>
         </div>
