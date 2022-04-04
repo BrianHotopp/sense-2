@@ -108,7 +108,7 @@ onMounted(() => {});
         <div class="col-12">
           <div class="card">
             <div class="card-body" style="text-align: left">
-              <h5 class="card-title">{{ a.name }}</h5>
+              <h3 class="card-title">{{ a.name }}</h3>
               <p class="card-text">{{ a.description }}</p>
             </div>
           </div>
