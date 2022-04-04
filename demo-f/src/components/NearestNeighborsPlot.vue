@@ -1,18 +1,17 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 const props = defineProps(
     ["word", "neighborWords", "neighborCoords"]
 )
-console.log(props.neighborCoords) 
+const option = computed(
+()=>{
 const tdata = props.neighborCoords.map((v, i)=>v.concat(props.neighborWords[i][0]))
-const option = ref(
-  {
+return {
   xAxis: {},
   yAxis: {},
   tooltip: {
       trigger: "item",
         formatter: function (param) {
-
           return param.data[2];
         },
 },
@@ -32,13 +31,14 @@ const option = ref(
     }
   ]
 }
-);
-const count = ref(0)
+
+}
+)
 </script>
 
 <template>
 <div>
-<v-chart class="chart" style="height: 400px; width: 100%;" :option="option" />
+<v-chart class="chart" style="height: 400px;" :option="option" />
 </div>
 </template>
 
