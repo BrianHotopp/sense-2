@@ -1,4 +1,3 @@
-#!/home/gruppi/projects/s4-demo/venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys
