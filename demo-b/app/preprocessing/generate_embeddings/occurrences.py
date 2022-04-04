@@ -29,37 +29,6 @@ def get_occurrences(file_in, limit=10000, workers=48):
                         occurrences[tok].add(i)
     return occurrences
 
-<<<<<<< HEAD
-=======
-
-def get_relevance(occurrences, shared_words):
-    """
-    returns a score for each line representing how many words from shared_words it contains
-    occurrences: dict(str: set(int)) - dictionary of which lines contain which words
-    shared_words: set(str) - set of words to compare to
-    """
-    relevance = dict()
-    for word in occurrences:
-        if word in shared_words:
-            for line in occurrences[word]:
-                if line in relevance:
-                    relevance[line] += 1
-                else:
-                    relevance[line] = 1
-    return relevance
-
-
-def get_lines(occurrences, word):
-    """
-    returns a list of lines that contain the word
-    occurrences: dict(str: set(int)) - dictionary of which lines contain which words
-    word: str - word to search for
-    """
-    if word in occurrences:
-        return occurrences[word]
-    else:
-        return set()
->>>>>>> d305d6f7b2f4d14ff6b41df8a4f578f485792120
 
 
 def _embed_line(line, wv, c, vectors):
@@ -109,30 +78,3 @@ def line_from_file(file, line_index):
         for i, line in enumerate(f):
             if i == line_index:
                 return line
-
-<<<<<<< HEAD
-=======
-
-def get_best_lines(pt_path, occurrences, alignment, target):
-    """
-    get the most "robust" example sentence showcasing semantic dissimilarity
-    pt_path: path object pointing to the plaintext
-    lines: list(list(str)) - list of sentences
-    alignment: alignment object with vectors for the common words
-    target: word to get dissimilar examples for
-    returns: list(list(str)) - list of sentences
-    """
-    # read in the lines
-    with pt_path.open() as f:
-        lines = f.readlines()
-    # get the indices of the lines that contain the target word
-    indices = get_lines(occurrences, target)
-    # get the lines
-    lines = sentences_from_indices(lines, indices)
-    # embed the lines using wv1
-    lv1 = embed_lines(lines, alignment.wv1)
-    # embed the lines using wv2
-    lv2 = embed_lines(lines, alignment.wv2)
-    # get the relevance of the lines
-    relevance = get_relevance(occurrences, set([target]))
->>>>>>> d305d6f7b2f4d14ff6b41df8a4f578f485792120
