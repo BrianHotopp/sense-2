@@ -64,7 +64,7 @@ watch(selected_word, async (newWord, oldWord) => {
     },
     body: JSON.stringify({
       a_id: props.a.id,
-      word: selected_word.value,
+      word: newWord,
       first: first.value,
       neighbors: n_neighbors.value,
     }),

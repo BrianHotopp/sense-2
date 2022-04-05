@@ -20,7 +20,7 @@ const props = defineProps(
     </tr>
   </thead>
   <tbody>
-    <tr v-for="(word, index) in neighborWords" :key="index">
+    <tr v-for="(word, index) in neighborWords.slice(0, -1)" :key="index">
       <th scope="row">{{index+1}}</th>
       <td><a href="#!" @click="$emit('selectWord', word[0])">{{word[0]}}</a></td>
       <td>{{word[1]}}</td>

@@ -54,15 +54,17 @@ class Alignment:
             # find nearest neighbors in the second context
             indices = np.argpartition(self.dists[wi, :], num_neighbors)[:num_neighbors]
             r = [(self.common[i], self.dists[wi, i], self.v2[i]) for i in indices]
+            iv = self.v1[wi]
         else:
             # target word is in the second context
             # find nearest neighbors in the first context
             indices = np.argpartition(self.dists[:, wi], num_neighbors)[:num_neighbors]
             r = [(self.common[i], self.dists[i, wi], self.v1[i]) for i in indices]
+            iv = self.v2[wi]
         r.sort(key=lambda x: x[1])
         # return unzipped r
         words, distances, vectors = zip(*r)
-        return words, distances, vectors
+        return words, distances, vectors, iv
 
     @staticmethod
     def from_wv_and_config(wv1, wv2, config_dict):

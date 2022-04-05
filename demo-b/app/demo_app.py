@@ -2,7 +2,6 @@ from ctypes import alignment
 import time
 import uuid
 from flask import Flask, request, jsonify, current_app, g
-from flask_caching import Cache
 import argparse
 import numpy as np
 import pickle
@@ -122,10 +121,7 @@ app.config["OCCURRENCES_FOLDER"] = OCCURRENCES_FOLDER
 app.config["EMBEDDINGS_FOLDER"] = EMBEDDINGS_FOLDER
 app.config["ALIGNMENTS_FOLDER"] = ALIGNMENTS_FOLDER
 app.config["TOKENIZED_FOLDER"] = TOKENIZED_FOLDER 
-app.config["CACHE_TYPE"] = "SimpleCache"
-app.config["CACHE_DEFAULT_TIMEOUT"] = 500
 CORS(app, resources={r"/*": {"origins": "*"}})
-cache = Cache(app)
 # uncomment this line to reset the db on app start
 #clean_start()
 
@@ -380,7 +376,6 @@ def get_alignment_configs():
 
 
 @app.route("/getTopShiftedWords", methods=["POST"])
-@cache.cached(timeout=300)
 def get_top_shifted_words():
     """
     gets the top shifted words for an alignment
@@ -408,7 +403,6 @@ def get_top_shifted_words():
     return jsonify({"message": "Top shifted words retrieved", "shifted_words": ts}), 200
 
 @app.route("/getExampleSentences", methods=["POST"])
-@cache.cached(timeout=50)
 def get_example_sentences():
     """
     given a word and an alignment id
@@ -469,7 +463,6 @@ def get_example_sentences():
     return jsonify({"message": "Example sentences retrieved", "sentences": sents}), 200
 
 @app.route("/getContext", methods=["POST"])
-@cache.cached(timeout=50)
 def get_context():
     """
     gets a context for a word
@@ -511,10 +504,15 @@ def get_context():
     # load pickled alignment from disk
     with open(al_p, "rb") as f:
         a = pickle.load(f)
-    words, distances, v = a.get_context(word, first, n_neighbors)
+    words, distances, v, iv = a.get_context(word, first, n_neighbors)
     # zip words and distances into dict
+    words = list(words)
+    words.append(word)
+    distances = list(distances)
+    distances.append(0)
     zipped = list(zip(words, distances))
-    v_2d = PCA(n_components=2).fit_transform(v)
+    total = np.vstack((v, iv))
+    v_2d = PCA(n_components=2).fit_transform(total)
     return (
         jsonify(
             {"message": "Context retrieved", "neighbors": zipped, "vectors": v_2d.tolist()}

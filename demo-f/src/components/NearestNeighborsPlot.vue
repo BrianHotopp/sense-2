@@ -6,6 +6,8 @@ const props = defineProps(
 const option = computed(
 ()=>{
 const tdata = props.neighborCoords.map((v, i)=>v.concat(props.neighborWords[i][0]))
+const cdata = tdata.slice(0, -1)
+const wdata = tdata.slice(-1)
 return {
   xAxis: {},
   yAxis: {},
@@ -16,9 +18,22 @@ return {
         },
 },
   series: [
+  {
+      symbolSize: 15,
+      data: wdata,
+      type: 'scatter',
+      label: {
+        show: true,
+        position: 'right',
+        minMargin: 3,
+        formatter: function (param) {
+          return param.data[2];
+        },
+      }
+    },
     {
       symbolSize: 15,
-      data: tdata,
+      data: cdata,
       type: 'scatter',
       label: {
         show: true,
