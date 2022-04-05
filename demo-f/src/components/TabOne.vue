@@ -24,7 +24,7 @@ onMounted(() => {
       <div class="row" >
         <div class="col mb-4" v-for="pt in ptexts" :key="pt.id" >
           <a
-            href="#"
+            href="#!"
             class="list-group-item-action"
             style="text-decoration: none"
             @click="$emit('ptClicked', pt.id)"

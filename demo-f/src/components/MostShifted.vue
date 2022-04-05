@@ -24,7 +24,7 @@ const count = ref(0)
   <tbody>
     <tr v-for="(word, index) in words" :key="index">
       <th scope="row">{{index+1}}</th>
-      <td><a href="#" @click="$emit('selectWord', word[0])">{{word[0]}}</a></td>
+      <td><a href="#!" @click="$emit('selectWord', word[0])">{{word[0]}}</a></td>
       <td>{{word[1]}}</td>
     </tr>
   </tbody>

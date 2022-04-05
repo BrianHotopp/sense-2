@@ -181,7 +181,7 @@ const prevDisabled = computed(() => ({
                   class="nav-link"
                   :class="{ active: active_tab === 0 }"
                   aria-current="page"
-                  href="#"
+                  href="#!"
                   @click="setTab(0)"
                   >Home</a
                 >
@@ -189,21 +189,21 @@ const prevDisabled = computed(() => ({
                   class="nav-link"
                   :class="{ active: active_tab === 1 }"
                   @click="setTab(1)"
-                  href="#"
+                  href="#!"
                   >Datasets</a
                 >
                 <a
                   class="nav-link"
                   :class="{ active: active_tab === 2 }"
                   @click="setTab(2)"
-                  href="#"
+                  href="#!"
                   >Embeddings</a
                 >
                 <a
                   class="nav-link"
                   :class="{ active: active_tab === 3 }"
                   @click="setTab(3)"
-                  href="#"
+                  href="#!"
                   >Alignments</a
                 >
               </div>
