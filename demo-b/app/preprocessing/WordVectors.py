@@ -226,5 +226,4 @@ class WordVectors:
             vectors = np.array([wv.get_vector(w) for w in wv0_order])
             wv_out.append(WordVectors(wv0_order, vectors))
         end = time.time()
-        print(f"Time to compute intersect: {end-start}")
         return wv_out
