@@ -1,18 +1,18 @@
 # ignores for flask backend
 # application artifacts
 # upload artifacts
-demo-b/app/uploads
-demo-b/app/occurrences
-demo-b/app/scrubbed
-demo-b/app/tokenized
+demo-b/app/uploads/
+demo-b/app/occurrences/
+demo-b/app/scrubbed/
+demo-b/app/tokenized/
 # embedding artifacts
-demo-b/app/embeddings
+demo-b/app/embeddings/
 # alignment artifacts
-demo-b/app/alignments/common_words
-demo-b/app/alignments/distances
-demo-b/app/alignments/embeddings
-demo-b/app/alignments/Q
-demo-b/app/alignments/shifts
+common_words/
+distances/
+embeddings/
+Q/
+shifts/
 
 
 # database holding all application data
