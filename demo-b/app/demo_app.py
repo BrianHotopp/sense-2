@@ -10,6 +10,8 @@ import json
 import sqlite3
 import app.preprocessing.generate_embeddings.occurrences as occ
 import app.preprocessing.generate_embeddings.embed as embed
+import app.preprocessing.tokenize as tokenize
+import app.preprocessing.sentencize as sentencize
 from app.preprocessing.generate_examples.alignment.align import Alignment
 from preprocessing.WordVectors import WordVectors
 from flask_cors import CORS
@@ -203,13 +205,13 @@ def upload_file():
         s_filename = Path(str(uuid.uuid4()) + ".txt")
         s_path = Path(app.config["SCRUBBED_FOLDER"]) / s_filename
         # scrub and write to s_path
-        embed.initial_scrub(f_path, s_path)
+        sentencize.initial_scrub(f_path, s_path)
         # tokenize the scrubbed file and save the tokenized copy
         # generate random tokenized filename
         t_filename = Path(str(uuid.uuid4()) + ".txt")
         t_path = Path(app.config["TOKENIZED_FOLDER"]) / t_filename
         # tokenize and write to t_path
-        embed.initial_tokenize(s_path, t_path)
+        tokenize.initial_tokenize(s_path, t_path)
         # generate occurrences
         occ_filename = Path(str(uuid.uuid4()) + ".txt")
         occ_path = Path(app.config["OCCURRENCES_FOLDER"]) / occ_filename
