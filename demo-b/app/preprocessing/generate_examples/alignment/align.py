@@ -1,8 +1,6 @@
 from time import time
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
-from scipy.spatial.distance import cosine
-from ...mapping import perform_mapping
 from app.preprocessing.WordVectors import WordVectors
 import app.preprocessing.generate_embeddings.occurrences as occ
 from .global_align import GlobalAlignConfig
@@ -30,37 +28,39 @@ class Alignment:
         self.shifts = shifts
         self.dists = dists
         self.Q = Q
-    def top_shifted_words(self, num_words=10):
+    @staticmethod
+    def top_shifted_words(common, shifts, num_words=10):
         """
         returns the top num_words shifted words in the alignment
         """
         # get the top shifted words
-        num_words = min(num_words, len(self.shifts)-1)
-        indices = np.argpartition(self.shifts, -1*num_words)[-1*num_words:]
-        top_shifted_words = [(self.common[i], self.shifts[i]) for i in indices]
+        num_words = min(num_words, len(shifts)-1)
+        indices = np.argpartition(shifts, -1*num_words)[-1*num_words:]
+        top_shifted_words = [(common[i], shifts[i]) for i in indices]
         top_shifted_words.sort(key=lambda x: x[1], reverse=True)
         return top_shifted_words
-    def get_context(self, target, first, num_neighbors = 10):
+    @staticmethod
+    def get_context(common, v1, v2, dists, target, first, num_neighbors = 10):
         """
         get the nearest neighbors of the target word in the adjacent context
         """
         # this is bad o(n) in the number of words in the intersection
         # but fixing will require ds refactor
         # todo
-        wi = self.common.index(target)
+        wi = common.index(target)
         # get the nearest neighbors
         if first:
             # target word is in the first context
             # find nearest neighbors in the second context
-            indices = np.argpartition(self.dists[wi, :], num_neighbors)[:num_neighbors]
-            r = [(self.common[i], self.dists[wi, i], self.v2[i]) for i in indices]
-            iv = self.v1[wi]
+            indices = np.argpartition(dists[wi, :], num_neighbors)[:num_neighbors]
+            r = [(common[i], dists[wi, i], v2[i]) for i in indices]
+            iv = v1[wi]
         else:
             # target word is in the second context
             # find nearest neighbors in the first context
-            indices = np.argpartition(self.dists[:, wi], num_neighbors)[:num_neighbors]
-            r = [(self.common[i], self.dists[i, wi], self.v1[i]) for i in indices]
-            iv = self.v2[wi]
+            indices = np.argpartition(dists[:, wi], num_neighbors)[:num_neighbors]
+            r = [(common[i], dists[i, wi], v1[i]) for i in indices]
+            iv = v2[wi]
         r.sort(key=lambda x: x[1])
         # return unzipped r
         words, distances, vectors = zip(*r)
@@ -84,7 +84,6 @@ class Alignment:
         v2 = wv2.vectors
 
         common = wv1.get_words()
-        print("Number of words in common: {}".format(len(common)))
         # semantic shift for each word
         shifts = Alignment.compute_shifts(v1, v2)
         dists = Alignment.compute_dists(v1, v2)
@@ -108,21 +107,23 @@ class Alignment:
             raise ValueError("Unknown alignment type encountered in config")
 
     @staticmethod
-    def compute_shifts(wv1, wv2):
+    def compute_shifts(wv1, wv2, verbose=False):
         """
         computes the semantic shift for each word in the example
         """
         # compute row-wise cosine similarity
         # time how long it takes
-        start = time()
+        if verbose:
+            start = time()
         cosDist = True
         if not cosDist:
             # cos sim
             r = paired_cosine_distances(wv1, wv2) * -1 + 1
         else:
             r = paired_cosine_distances(wv1, wv2)
-        end = time()
-        print("Computing shifts took {} seconds".format(end - start))
+        if verbose:
+            end = time()
+            print("Computing shifts took {} seconds".format(end - start))
         return r
 
     @staticmethod

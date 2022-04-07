@@ -32,8 +32,18 @@ create table alignments (
   description varchar not null,
   e1_id integer not null,
   e2_id integer not null,
-  -- path to the alignment object
-  a_path varchar not null,
+  -- path to common words
+  c_path varchar not null,
+  -- path to the first aligned embedding
+  v1_path varchar not null,
+  -- path to the secondn aligned embeddings
+  v2_path varchar not null,
+  -- path to shifts
+  s_path varchar not null,
+  -- path to dists
+  d_path varchar not null,
+  -- path to q
+  q_path varchar not null,
   -- foreign key constraints, on delete cascade
   foreign key (e1_id) references embeddings(id) on delete cascade
   foreign key (e2_id) references embeddings(id) on delete cascade
