@@ -19,26 +19,28 @@ return {
 },
   series: [
   {
-      symbolSize: 15,
+      symbolSize: 40,
       data: wdata,
       type: 'scatter',
       label: {
         show: true,
         position: 'right',
         minMargin: 3,
+        fontSize: 24,
         formatter: function (param) {
           return param.data[2];
         },
       }
     },
     {
-      symbolSize: 15,
+      symbolSize: 40,
       data: cdata,
       type: 'scatter',
       label: {
         show: true,
         position: 'right',
         minMargin: 3,
+        fontSize: 24,
         formatter: function (param) {
           return param.data[2];
         },
@@ -53,7 +55,7 @@ return {
 
 <template>
 <div>
-<v-chart class="chart" style="height: 400px;" :option="option" />
+<v-chart class="chart" style="height: 1080px; width: 1920px;" :option="option" />
 </div>
 </template>
 
