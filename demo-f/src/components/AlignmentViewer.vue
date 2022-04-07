@@ -135,7 +135,7 @@ onMounted(() => {});
           </div>
           <div class="row">
             <p v-if="neighbor_coords != null">
-              Viewing nearest neighbors as if {{ selected_word }} is in the
+              Viewing nearest neighbors as if <b>"{{ selected_word }}"</b> is in the
               <select v-model="first">
                 <option value="true">First</option>
                 <option value="false">Second</option>
