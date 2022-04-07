@@ -49,7 +49,7 @@ class ExampleSentencesTest(unittest.TestCase):
         wv1i, wv2i = WordVectors.intersect(wv1, wv2)
         wv1a, wv2a, Q = cfg.align(wv1i, wv2i)
         # example target word
-        target = "margin"
+        target = "vice"
         print(f"there are at least {len(occs1[target])} sentences in pt1 with {target}")
         print(f"there are at least {len(occs2[target])} sentences in pt2 with {target}")
         # indices of sentences in pt1 and pt2 that contain the target word
@@ -66,6 +66,7 @@ class ExampleSentencesTest(unittest.TestCase):
             print(sents[0])
             print("Sentence 2")
             print(sents[1])
+            c+=1
         
 if __name__ == "__main__":
     unittest.main()
