@@ -152,7 +152,7 @@ const nextDisabled = computed(() => ({
     (active_tab.value === 1 && pts1.value === null) ||
     (active_tab.value === 1 && pts2.value === null) ||
     // we are on the last tab
-    active_tab.value === total_tabs.value || 
+    active_tab.value === total_tabs.value - 1 || 
     // we are on tab 2 and haven't selected two embeddings
     active_tab.value === 2 && e_1.value === null ||
     active_tab.value === 2 && e_2.value ===  null
