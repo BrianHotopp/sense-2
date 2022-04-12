@@ -48,24 +48,3 @@ create table alignments (
   foreign key (e1_id) references embeddings(id) on delete cascade
   foreign key (e2_id) references embeddings(id) on delete cascade
 );
-
-drop table if exists dists;
-create table dists (
-  a_id integer not null,
-  word1 varchar not null,
-  word2 varchar not null,
-  dist float not null,
-  primary key (a_id, word1, word2)
-  -- foreign key constraints, on delete cascade
-  foreign key (a_id) references alignments(id) on delete cascade
-);
-drop table if exists shifts;
-create table shifts (
-  a_id integer not null,
-  word varchar not null,
-  shift float not null,
-  primary key (a_id, word)
-  -- foreign key constraints, on delete cascade
-  foreign key (a_id) references alignments(id) on delete cascade
-
-);
