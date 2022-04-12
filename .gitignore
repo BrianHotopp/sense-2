@@ -1,12 +1,12 @@
 # ignores for flask backend
 # application artifacts
 # upload artifacts
-demo-b/app/uploads/
-demo-b/app/occurrences/
-demo-b/app/scrubbed/
-demo-b/app/tokenized/
+uploads/
+occurrences/
+scrubbed/
+tokenized/
 # embedding artifacts
-demo-b/app/embeddings/
+embeddings/
 # alignment artifacts
 common_words/
 distances/

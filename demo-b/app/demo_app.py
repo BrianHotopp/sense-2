@@ -18,16 +18,16 @@ from flask_cors import CORS
 from pathlib import Path
 
 DATABASE = "app/db/demo_app.db"
-UPLOAD_FOLDER = "app/uploads"
-SCRUBBED_FOLDER = "app/scrubbed"
-OCCURRENCES_FOLDER = "app/occurrences"
-TOKENIZED_FOLDER = "app/tokenized"
-EMBEDDINGS_FOLDER = "app/embeddings"
-COMMON_WORDS_FOLDER = "app/alignments/common_words"
-ALIGNED_EMBEDDINGS_FOLDER = "app/alignments/embeddings"
-SHIFTS_FOLDER = "app/alignments/shifts"
-DISTANCES_FOLDER = "app/alignments/distances"
-Q_FOLDER = "app/alignments/Q"
+UPLOAD_FOLDER = "app/artifacts/uploads"
+SCRUBBED_FOLDER = "app/artifacts/scrubbed"
+OCCURRENCES_FOLDER = "app/artifacts/occurrences"
+TOKENIZED_FOLDER = "app/artifacts/tokenized"
+EMBEDDINGS_FOLDER = "app/artifacts/embeddings"
+COMMON_WORDS_FOLDER = "app/artifacts/alignments/common_words"
+ALIGNED_EMBEDDINGS_FOLDER = "app/artifacts/alignments/embeddings"
+SHIFTS_FOLDER = "app/artifacts/alignments/shifts"
+DISTANCES_FOLDER = "app/artifacts/alignments/distances"
+Q_FOLDER = "app/artifacts/alignments/Q"
 ALLOWED_EXTENSIONS = set(["txt"])
 sqlite3.register_adapter(np.float64, float)
 
@@ -147,7 +147,7 @@ app.config["Q_FOLDER"] = Q_FOLDER
 
 CORS(app, resources={r"/*": {"origins": "*"}})
 # uncomment this line to reset the db on app start
-clean_start()
+#clean_start()
 
 
 @app.teardown_appcontext
