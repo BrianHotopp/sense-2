@@ -148,9 +148,14 @@ function setTab(i) {
 // object to say if next is disabled
 const nextDisabled = computed(() => ({
   disabled:
+  // we are on tab one and haven't selected two plaintexts
     (active_tab.value === 1 && pts1.value === null) ||
     (active_tab.value === 1 && pts2.value === null) ||
-    active_tab.value === total_tabs.value,
+    // we are on the last tab
+    active_tab.value === total_tabs.value - 1 || 
+    // we are on tab 2 and haven't selected two embeddings
+    active_tab.value === 2 && e_1.value === null ||
+    active_tab.value === 2 && e_2.value ===  null
 }));
 // object to say if prev is disabled
 const prevDisabled = computed(() => ({
