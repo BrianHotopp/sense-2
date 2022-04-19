@@ -13,6 +13,7 @@ const total_tabs = ref(7);
 function setTab(i) {
   active_tab.value = i;
 }
+
 // object to say if next is disabled
 const nextDisabled = computed(() => (
   {
@@ -22,7 +23,7 @@ const nextDisabled = computed(() => (
     // we are on the last tab
     active_tab.value === total_tabs.value - 1  ||
     // we are on tab 2 and haven't selected two embeddings
-    (active_tab.value === 2 && store.selectedEmbeddings.length < 2) || 
+    (active_tab.value === 2 && (store.selectedEmbeddings.forPt1.length < 1 || store.selectedEmbeddings.forPt2.length < 1)) || 
     // we are on tab 3 and we haven't selected at least one alignment
     (active_tab.value === 3 && store.selectedAlignments.length < 1)
 }));
