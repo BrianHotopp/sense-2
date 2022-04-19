@@ -33,6 +33,17 @@ class Alignment:
         """
         returns the top num_words shifted words in the alignment
         """
+        # error check inputs
+        if len(common) != len(shifts):
+            raise ValueError("common and shifts must be the same length")
+        # if num words is the wrong type
+        if not isinstance(num_words, int):
+            raise TypeError("num_words must be an integer")
+        if num_words < 0:
+            raise ValueError("num_words must be greater than 0")
+        if num_words == 0:
+            return []
+
         # get the top shifted words
         num_words = min(num_words, len(shifts)-1)
         indices = np.argpartition(shifts, -1*num_words)[-1*num_words:]
