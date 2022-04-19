@@ -13,19 +13,42 @@ const total_tabs = ref(7);
 function setTab(i) {
   active_tab.value = i;
 }
-
-// object to say if next is disabled
+// true if tab zero is disabled
+const tab_zero_disabled = computed(() => (false));
+// true if tab one is disabled
+const tab_one_disabled = computed(() => (false));
+// true if tab two is disabled
+const tab_two_disabled = computed(() => (
+  store.selectedPlaintexts.length < 2
+));
+// true if tab three is disabled
+const tab_three_disabled = computed(() => (
+  store.selectedEmbeddings.forPt1.length < 1 || store.selectedEmbeddings.forPt2.length < 1
+));
+// true if tab four is disabled
+const tab_four_disabled = computed(() => (
+ store.selectedAlignments.length < 1
+ ));
+// true if tab five is disabled
+const tab_five_disabled = computed(() => (
+  store.selectedAlignments.length < 1
+));
+// true if tab six is disabled
+const tab_six_disabled = computed(() => (
+  store.selectedAlignments.length < 1
+));
+// true if next is disabled
 const nextDisabled = computed(() => (
   {
   disabled:
     // we are on tab one and haven't selected two plaintexts
     (active_tab.value === 1 && store.selectedPlaintexts.length < 2) || 
-    // we are on the last tab
-    active_tab.value === total_tabs.value - 1  ||
     // we are on tab 2 and haven't selected two embeddings
     (active_tab.value === 2 && (store.selectedEmbeddings.forPt1.length < 1 || store.selectedEmbeddings.forPt2.length < 1)) || 
     // we are on tab 3 and we haven't selected at least one alignment
-    (active_tab.value === 3 && store.selectedAlignments.length < 1)
+    (active_tab.value === 3 && store.selectedAlignments.length < 1) ||
+    // we are on the last tab
+    active_tab.value === total_tabs.value - 1  
 }));
 // object to say if prev is disabled
 const prevDisabled = computed(() => ({
@@ -55,7 +78,7 @@ const prevDisabled = computed(() => ({
                 <li class="nav-item">
                   <a
                     class="nav-link"
-                    :class="{ active: active_tab === 0 }"
+                    :class="{ active: active_tab === 0, disabled: tab_zero_disabled }"
                     aria-current="page"
                     href="#"
                     @click="setTab(0)"
@@ -65,7 +88,7 @@ const prevDisabled = computed(() => ({
                 <li class="nav-item">
                   <a
                     class="nav-link"
-                    :class="{ active: active_tab === 1 }"
+                    :class="{ active: active_tab === 1, disabled: tab_one_disabled }"
                     @click="setTab(1)"
                     href="#"
                     >Datasets</a
@@ -74,7 +97,7 @@ const prevDisabled = computed(() => ({
                 <li class="nav-item">
                   <a
                     class="nav-link"
-                    :class="{ active: active_tab === 2 }"
+                    :class="{ active: active_tab === 2, disabled: tab_two_disabled }"
                     @click="setTab(2)"
                     href="#"
                     >Embeddings</a
@@ -83,7 +106,7 @@ const prevDisabled = computed(() => ({
                 <li class="nav-item">
                   <a
                     class="nav-link"
-                    :class="{ active: active_tab === 3 }"
+                    :class="{ active: active_tab === 3, disabled: tab_three_disabled }"
                     @click="setTab(3)"
                     href="#"
                     >Alignments</a
@@ -92,7 +115,7 @@ const prevDisabled = computed(() => ({
 <li class="nav-item">
                   <a
                     class="nav-link"
-                    :class="{ active: active_tab === 4 }"
+                    :class="{ active: active_tab === 4, disabled: tab_four_disabled }"
                     @click="setTab(4)"
                     href="#"
                     >Most Shifted</a
@@ -101,7 +124,7 @@ const prevDisabled = computed(() => ({
 <li class="nav-item">
                   <a
                     class="nav-link"
-                    :class="{ active: active_tab === 5 }"
+                    :class="{ active: active_tab === 5, disabled: tab_five_disabled }"
                     @click="setTab(5)"
                     href="#"
                     >Nearest Neighbors</a
@@ -110,7 +133,7 @@ const prevDisabled = computed(() => ({
 <li class="nav-item">
                   <a
                     class="nav-link"
-                    :class="{ active: active_tab === 6 }"
+                    :class="{ active: active_tab === 6, disabled: tab_six_disabled }"
                     @click="setTab(6)"
                     href="#"
                     >Sentences</a
