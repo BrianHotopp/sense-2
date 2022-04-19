@@ -2,10 +2,10 @@
 </script>
 
 <template>
-<div class="container-xl">
+<div class="container-xl mb-3">
       <div class="row">
         <div class="col-12">
-          <div class="card mt-4 mb-4 p-4">
+          <div class="card p-4">
             <h5>What is SenSE?</h5>
             <p>
               <b>SenSE</b> is a tool that facilitates the analysis and
@@ -47,7 +47,4 @@
 </template>
 
 <style scoped>
-a {
-  color: #42b983;
-}
 </style>

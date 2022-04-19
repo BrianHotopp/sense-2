@@ -189,7 +189,6 @@ def get_embeddings():
         pt_id = data["pt_id"]
         return jsonify(query_db("SELECT * FROM embeddings WHERE pt_id = ?", (pt_id,)))
     else:
-        print(data)
         return jsonify({"error": "No plaintext id provided"})
 
 
@@ -200,23 +199,23 @@ def upload_file():
     """
     # check if the post request has the file part
     if "file" not in request.files:
-        return jsonify({"message": "No file part in the request"}), 400
+        return jsonify({"error": "No file part in the request"}), 400
     file = request.files["file"]
     # check if the post request has the data part
     if "data" not in request.form:
-        return jsonify({"message": "No data part in the request"}), 400
+        return jsonify({"error": "No data part in the request"}), 400
     d = json.loads(request.form.get("data"))
     # check to see if the post request has the dataset name
     if "name" not in d:
-        return jsonify({"message": "No dataset name in the request"}), 400
+        return jsonify({"error": "No dataset name in the request"}), 400
     dataset_name = d["name"]
     # check to see if the post request has the dataset description
     if "description" not in d:
-        return jsonify({"message": "No dataset description in the request"}), 400
+        return jsonify({"error": "No dataset description in the request"}), 400
     dataset_description = d["description"]
     # if user does not select file, the browser will submit an empty string anyway 
     if file.filename == "":
-        return jsonify({"message": "No file selected for uploading"}), 400
+        return jsonify({"error": "No file selected for uploading"}), 400
     if file and allowed_file(file.filename):
         # generate a random filename
         filename = Path(str(uuid.uuid4()) + ".txt")
@@ -259,7 +258,7 @@ def upload_file():
             ),
             201,
         )
-    return jsonify({"message": "Allowed file types are txt"}), 400
+    return jsonify({"error": "Invalid file type: allowed file types are txt"}), 400
 
 
 # route to generate an embedding for a file in the database
@@ -274,20 +273,20 @@ def generate_embedding():
     d = request.get_json()
     # check to see if the request has the dataset id
     if "id" not in d:
-        return jsonify({"message": "No dataset id in the request"}), 400
+        return jsonify({"error": "No dataset id in the request"}), 400
     # check to see if the request has a name
     if "name" not in d:
-        return jsonify({"message": "No name in the request"}), 400
+        return jsonify({"error": "No name in the request"}), 400
     # check to see if the request has a description
     if "description" not in d:
-        return jsonify({"message": "No description in the request"}), 400
+        return jsonify({"error": "No description in the request"}), 400
     pt_id = d["id"]
     e_name = d["name"]
     e_description = d["description"]
     # if the provided file id is not in the database
     pt = query_db("SELECT t_path FROM plaintexts WHERE id = ?", (pt_id,), one=True)
     if pt is None:
-        return jsonify({"message": "Invalid file id"}), 400
+        return jsonify({"error": "Invalid file id"}), 400
     # get the path to the tokenized plaintext from the database response
     pt_p = pt["t_path"]
     pt_po = Path(pt_p)
@@ -320,16 +319,16 @@ def generate_alignment():
     config = d["config"]
     # if the embedding ids are the same
     if e1_id == e2_id:
-        return jsonify({"message": "Cannot align embeddings with themselves"}), 400
+        return jsonify({"error": "Cannot align embeddings with themselves"}), 400
     # if the provided e1_id is not in the database
     e1 = query_db("SELECT wv_path FROM embeddings WHERE id = ?", (e1_id,), one=True)
     if e1 is None:
-        return jsonify({"message": f"Invalid embedding id: {e1_id}"}), 400
+        return jsonify({"error": f"Invalid embedding id: {e1_id}"}), 400
     e1wvp = Path(e1["wv_path"])
     # if the provided e2_id is not in the database
     e2 = query_db("SELECT wv_path FROM embeddings WHERE id = ?", (e2_id,), one=True)
     if e2 is None:
-        return jsonify({"message": f"Invalid embedding id: {e2_id}"}), 400
+        return jsonify({"error": f"Invalid embedding id: {e2_id}"}), 400
     e2wvp = Path(e2["wv_path"])
     # get the wv object for the first embedding
     wv1 = WordVectors.from_file(e1wvp)
@@ -399,16 +398,16 @@ def get_alignments():
     e2_id = min(d["e1_id"], d["e2_id"])
     # if the embedding ids are the same
     if e1_id == e2_id:
-        return jsonify({"message": "Cannot align embeddings with themselves"}), 400
+        return jsonify({"error": "Cannot align embeddings with themselves"}), 400
     # if the provided e1_id is not in the database
     if query_db("SELECT * FROM embeddings WHERE id = ?", (e1_id,), one=True) is None:
-        return jsonify({"message": f"Invalid embedding id: {e1_id}"}), 400
+        return jsonify({"error": f"Invalid embedding id: {e1_id}"}), 400
     # if the provided e2_id is not in the database
     if query_db("SELECT * FROM embeddings WHERE id = ?", (e2_id,), one=True) is None:
-        return jsonify({"message": f"Invalid embedding id: {e2_id}"}), 400
+        return jsonify({"error": f"Invalid embedding id: {e2_id}"}), 400
     # get the alignments
     r = query_db(
-        "SELECT * FROM alignments WHERE e1_id = ? AND e2_id = ?", (e1_id, e2_id)
+        "SELECT id, name, description FROM alignments WHERE e1_id = ? AND e2_id = ?", (e1_id, e2_id)
     )
     return jsonify({"message": "Alignments retrieved", "alignments": r}), 200
 
@@ -423,11 +422,11 @@ def get_alignment():
     d = request.get_json()
     # check if the request has an id
     if "id" not in d:
-        return jsonify({"message": "No id provided"}), 400
+        return jsonify({"error": "No id provided"}), 400
     a_id = d["id"]
     # if the provided alignment id is not in the database
     if query_db("SELECT * FROM alignments WHERE id = ?", (a_id,), one=True) is None:
-        return jsonify({"message": "Invalid alignment id"}), 400
+        return jsonify({"error": "Invalid alignment id"}), 400
     # get the alignment from the database
     a = query_db("SELECT * FROM alignments WHERE id = ?", (a_id,), one=True)
     return jsonify({"message": "Alignment retrieved", "alignment": a}), 200
@@ -441,7 +440,7 @@ def get_alignment_configs():
     alignment_configs_path = Path("app/metadata/alignment_configs_example.json")
     # check path exists
     if not alignment_configs_path.exists():
-        raise ValueError("Could not find alignment configs file")
+        return jsonify({"error": "Alignment configs file not found"}), 404
     with alignment_configs_path.open() as f:
         return jsonify(json.load(f))
 
@@ -455,23 +454,31 @@ def get_top_shifted_words():
     d = request.get_json()
     # check if the request has an id
     if "id" not in d:
-        return jsonify({"message": "No id provided"}), 400
+        return jsonify({"error": "No id provided"}), 400
     a_id = d["id"]
     # if the provided alignment id is not in the database
     r = query_db("SELECT c_path, s_path FROM alignments WHERE id = ?", (a_id,), one=True)
     if r is None:
-        return jsonify({"message": "Invalid alignment id"}), 400
+        return jsonify({"error": "Invalid alignment id"}), 400
     # check if the request has a desired number of words
     if "num_words" not in d:
-        return jsonify({"message": "No number of words provided"}), 400
+        return jsonify({"error": "No number of words provided"}), 400
     num_words = d["num_words"]
+    # check if num words is an integer
+    if not isinstance(num_words, int):
+        return jsonify({"error": "Number of words must be an integer"}), 400
     # get the path to the shifts for the alignment
     s_path = Path(r["s_path"])
     s = pickle.load(open(s_path, "rb"))
     # get the path to the common words for the alignment
     c_path = Path(r["c_path"])
     c = pickle.load(open(c_path, "rb"))
-    ts = Alignment.top_shifted_words(c, s, num_words) 
+    try:
+        ts = Alignment.top_shifted_words(c, s, num_words) 
+    except ValueError as e:
+        return jsonify({"message": str(e)}), 400
+
+    
     return jsonify({"message": "Top shifted words retrieved", "shifted_words": ts}), 200
 
 
@@ -486,7 +493,7 @@ def get_example_sentences():
     d = request.get_json()
     # check if the request has an id
     if "id" not in d:
-        return jsonify({"message": "No alignment id provided"}), 400
+        return jsonify({"error": "No alignment id provided"}), 400
     a_id = d["id"]
     # get the alignment from the database
     a = query_db(
@@ -494,10 +501,10 @@ def get_example_sentences():
     )
     # if the provided alignment id is not in the database
     if a is None:
-        return jsonify({"message": "Invalid alignment id"}), 400
+        return jsonify({"error": "Invalid alignment id"}), 400
     # check if the request has a word
     if "word" not in d:
-        return jsonify({"message": "No word provided"}), 400
+        return jsonify({"error": "No word provided"}), 400
     word = d["word"]
     e1_id = a["e1_id"]
     e2_id = a["e2_id"]
@@ -553,23 +560,23 @@ def get_context():
     d = request.get_json()
     # check if the request has an alignment id
     if "a_id" not in d:
-        return jsonify({"message": "No alignment id provided"}), 400
+        return jsonify({"error": "No alignment id provided"}), 400
     # get the alignment id
     a_id = d["a_id"]
     # check if the alignment id is valid
     db_r = query_db("SELECT * FROM alignments WHERE id = ?", (a_id,), one=True)
     if db_r is None:
-        return jsonify({"message": "Invalid alignment id"}), 400
+        return jsonify({"error": "Invalid alignment id"}), 400
     # check if the request has a word
     if "word" not in d:
-        return jsonify({"message": "No word provided"}), 400
+        return jsonify({"error": "No word provided"}), 400
     word = d["word"]
     # check if the request has a first
     if "first" not in d:
         return (
             jsonify(
                 {
-                    "message": "No first flag supplied, cannot know if target word is in first or second context of alignment"
+                    "error": "No first flag supplied, cannot know if target word is in first or second context of alignment"
                 }
             ),
             400,
@@ -579,8 +586,10 @@ def get_context():
     elif d["first"] == "false":
         first = False
     # check if the request has a desired number of neighbors
-    if "neighbors" in d:
+    if "neighbors" not in d:
         n_neighbors = 10
+    else:
+        n_neighbors = d["neighbors"]
     # get the common words for the alignment
     c_path = Path(db_r["c_path"])
     c = pickle.load(open(c_path, "rb"))
@@ -592,10 +601,13 @@ def get_context():
     # get the distances for the alignment
     d_path = Path(db_r["d_path"])
     d = pickle.load(open(d_path, "rb"))
+    # if we request more neighbors than there are in the alignment
+    if n_neighbors > len(c):
+        n_neighbors = len(c)
     try:
         words, distances, v, iv = Alignment.get_context(c, v1, v2, d, word, first, n_neighbors)
     except ValueError:
-        return jsonify({"message": "Word not in alignment"}), 400
+        return jsonify({"error": "Word not in alignment"}), 400
     # zip words and distances into dict
     words = list(words)
     words.append(word)

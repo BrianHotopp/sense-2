@@ -2,16 +2,16 @@
 import { ref } from 'vue'
 
 const props = defineProps(
-    ["words"]
+    ["alignmentName","words"]
 )
 
 const count = ref(0)
 </script>
 
 <template>
-<div>
+<div class="card p-2">
     <h5 style="text-align: left">
-        Most Shifted Words
+        Alignment type: <b>{{ alignmentName }}</b>
     </h5>
     <table class="table table-striped">
   <thead>
