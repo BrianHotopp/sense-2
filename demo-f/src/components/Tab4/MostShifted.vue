@@ -1,11 +1,38 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const props = defineProps(
-    ["alignmentName","words"]
+    ["alignmentName","words", "filterType", "commonWords"]
 )
 
-const count = ref(0)
+// computed for filtered words
+const filteredWords = computed(() => {
+  console.log(props.commonWords)
+    if (props.filterType=== "common") {
+        return props.words.filter((word) => {
+          console.log("word: ", word)
+            return props.commonWords.includes(word[0]);
+        })
+    } else if (props.filterType === "unique") {
+      // get words that are unique to this alignment
+      return props.words.filter((word) => {
+        return !props.commonWords.includes(word[0]);
+      })
+    } else {
+        return props.words;
+    }
+})
+// computed for active color
+const activeColor = computed(() => {
+    if (props.filterType === "common") {
+        return "#fff0c4"
+    } else if (props.filterType === "unique") {
+        return "#e4f7ee"
+    } else {
+        return "white"
+    }
+})
+
 </script>
 
 <template>
@@ -22,7 +49,10 @@ const count = ref(0)
     </tr>
   </thead>
   <tbody>
-    <tr v-for="(word, index) in words" :key="index">
+    <tr v-for="(word, index) in filteredWords" :key="index"
+   :style="{ background: activeColor}" 
+    
+    >
       <th scope="row">{{index+1}}</th>
       <td><a href="#!" @click="$emit('selectWord', word[0])">{{word[0]}}</a></td>
       <td>{{word[1].toFixed(2)}}</td>
