@@ -197,4 +197,53 @@ class Alignment:
             sents.append((occ.line_from_file(spt_path1, i1), occ.line_from_file(spt_path2, i2)))
         return sents
 
+
+    @staticmethod
+    def get_random_sentence(target, occ1, occ2, spt_path1, spt_path2, Q, wv1, wv2, max_sent=1000):
+        """
+        gets a pair of example sentences
+        a pair looks liks (sent1, list(sent2))
+        where sent1 is from spt_path1 and sent2 is from spt_path2
+        target: word to find example sentences for
+        occ1: dictionary containing the number of times each word occurs in each line of pt1
+        occ2: dictionary containing the number of times each word occurs in each line of pt2
+        spt_path1: path object to the scrubbed plaintext 1
+        spt_path2: path object to the scrubbed plaintext 2
+        Q: rotation matrix of the associated alignment
+        wv1: WordVectors to embed the sentences from pt1 with
+        wv2: WordVectors to embed the sentences from pt2 with
+        max_sent: the maximum number of sentences to return
+        """
+        i1 = occ1[target]
+        i2 = occ2[target]
+        indices1, s1te = occ.embed_lines(spt_path1, i1, wv1)
+        indices2, s2te = occ.embed_lines(spt_path2, i2, wv2)
+        # align embedded sentences using Q
+        s1tea = np.matmul(s1te, Q)
+        max_sent = min(max_sent, len(indices1), len(indices2))
+        sims = cosine_similarity(s1tea, s2te)
+        # randomly pick some sentence from the first context
+        i = int(np.random.choice(range(len(indices1)), 1)[0])
+        # subset sims to only compare to the sentence we picked
+        sims = sims[i, :]
+        max_sent = min(3, sims.shape[0])
+        indices = np.argpartition(
+            sims,
+            max_sent,
+            axis=None,
+            kind="introselect",
+            order=None
+        )
+        indices = indices[:min(len(indices), max_sent)]
+        spt2inds = []
+        for ind in indices:
+            j = ind 
+            spt2inds.append(indices2[j])
+        sents = []
+        for i2 in spt2inds:
+            sents.append(occ.line_from_file(spt_path2, i2))
+        ts = occ.line_from_file(spt_path1, indices1[i])
+        return ts, sents
+
+
         

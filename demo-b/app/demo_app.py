@@ -481,6 +481,83 @@ def get_top_shifted_words():
     
     return jsonify({"message": "Top shifted words retrieved", "shifted_words": ts}), 200
 
+@app.route("/getRandomSentence", methods=["POST"])
+def get_random_sentence():
+    """
+    given a word and an alignment id
+    gets sentences from the original plaintexts showcasing
+    semantically dissimilar usage of the word
+    """
+    # get request json
+    d = request.get_json()
+    # check if the request has an id
+    if "id" not in d:
+        return jsonify({"error": "No alignment id provided"}), 400
+    a_id = d["id"]
+    # get the alignment from the database
+    a = query_db(
+        "SELECT e1_id, e2_id, q_path FROM alignments WHERE id = ?", (a_id,), one=True
+    )
+    # if the provided alignment id is not in the database
+    if a is None:
+        return jsonify({"error": "Invalid alignment id"}), 400
+    # check if the request has a word
+    if "word" not in d:
+        return jsonify({"error": "No word provided"}), 400
+    # check if first provided
+    if "first" not in d:
+        return jsonify({"error": "No first provided"}), 400
+    first = d["first"]
+    word = d["word"]
+    e1_id = a["e1_id"]
+    e2_id = a["e2_id"]
+    # swap if not first
+    if first == "false":
+        e1_id, e2_id = e2_id, e1_id
+    
+    q_path = Path(a["q_path"])
+
+    # generate examples
+    # load alignment from disk
+    with open(q_path, "rb") as f:
+        Q = pickle.load(f)
+    # get wordvectors and plaintext ids associated with the specified embeddings
+    pt1_d = query_db(
+        "SELECT pt_id, wv_path FROM embeddings WHERE id = ?", (e1_id,), one=True
+    )
+    pt2_d = query_db(
+        "SELECT pt_id, wv_path FROM embeddings WHERE id = ?", (e2_id,), one=True
+    )
+    pt1_id = pt1_d["pt_id"]
+    pt2_id = pt2_d["pt_id"]
+    e1_v_po = Path(pt1_d["wv_path"])
+    e2_v_po = Path(pt2_d["wv_path"])
+    # get the path to the scrubbed plaintext and occs file from the database (for pt1)
+    r = query_db(
+        "SELECT s_path, occ_path FROM plaintexts WHERE id = ?", (pt1_id,), one=True
+    )
+    occ1_po = Path(r["occ_path"])
+    s1_po = Path(r["s_path"])
+    # get the path to the scrubbed plaintext and occs file from the database (for pt2)
+    r = query_db(
+        "SELECT s_path, occ_path FROM plaintexts WHERE id = ?", (pt2_id,), one=True
+    )
+    occ2_po = Path(r["occ_path"])
+    s2_po = Path(r["s_path"])
+    # load the occs files from disk
+    with open(occ1_po, "rb") as f:
+        occs1 = pickle.load(f)
+    with open(occ2_po, "rb") as f:
+        occs2 = pickle.load(f)
+    # load the wv objects for both embeddings from disk
+    wv1 = WordVectors.from_file(e1_v_po)
+    wv2 = WordVectors.from_file(e2_v_po)
+    sents = Alignment.get_random_sentence(
+        word, occs1, occs2, s1_po, s2_po, Q, wv1, wv2
+    )
+    return jsonify({"message": "Example sentences retrieved", "sentences": sents}), 200
+
+
 
 @app.route("/getExampleSentences", methods=["POST"])
 def get_example_sentences():
