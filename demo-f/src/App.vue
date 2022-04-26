@@ -154,7 +154,7 @@ const prevDisabled = computed(() => ({
       <TabThree
         v-if="active_tab == 3"
       />
-      <TabFour v-if="active_tab == 4" :selected-alignments="store.selectedAlignments"/>
+      <TabFour v-if="active_tab == 4" :selected-alignments="store.selectedAlignments" @next-tab="setTab"/>
       <TabFive v-if="active_tab == 5" :selected-alignments="store.selectedAlignments"/>
       <TabSix v-if="active_tab == 6" :selected-alignments="store.selectedAlignments"/>
       <div class="container-xl mb-3">
