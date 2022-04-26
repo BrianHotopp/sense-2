@@ -163,7 +163,7 @@ const prevDisabled = computed(() => ({
             <div class="d-flex justify-content-end">
               <button
                 type="button"
-                class="btn btn-secondary btn-lg"
+                class="btn btn-secondary btn-lg me-md-2"
                 :class="prevDisabled"
                 @click.prevent="setTab(Math.max(active_tab - 1, 0))"
               >
