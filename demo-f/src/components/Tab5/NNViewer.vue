@@ -78,16 +78,26 @@ onMounted(() => {
     if (store.selectedWord != null) {
         target_word.value = store.selectedWord;
         formdata.value.target_word = store.selectedWord;
-    } else {
-        getSingleMostShiftedWord(props.al).then((word) => {
-            target_word.value = word;
-            formdata.value.target_word = word;
-        })
-    }
     // get the context for chosen word
     getContext(props.al, target_word.value, first.value, num_neighbors.value).then((data) => {
         displaydata.value = data;
     })
+    } else {
+        console.log("null")
+        console.log(store.selectedWord)
+        getSingleMostShiftedWord(props.al).then((word) => {
+            target_word.value = word;
+            formdata.value.target_word = word;
+        }).then(()=>{
+    // get the context for chosen word
+    getContext(props.al, target_word.value, first.value, num_neighbors.value).then((data) => {
+        displaydata.value = data;
+    })
+
+        }
+
+        )
+    }
 })
 function swapContext(){
     // fetch the new context
