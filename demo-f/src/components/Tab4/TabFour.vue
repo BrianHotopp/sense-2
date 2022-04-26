@@ -1,12 +1,14 @@
 <script setup>
 
-import { ref, onMounted, watchEffect, computed } from 'vue'
+import { ref, onMounted, watchEffect, computed, watch } from 'vue'
 import MostShifted from "./MostShifted.vue"
 import {store} from "../../store.js";
 const display = ref([]);
 const numWords = ref(20);
 const props = defineProps(['selectedAlignments']);
 const emit = defineEmits(['nextTab']);
+const filtertype = ref("all");
+const shown_filtered_words = ref([]);
 function chunkArray(myArray, chunk_size) {
   var index = 0;
   var arrayLength = myArray.length;
@@ -53,7 +55,24 @@ function selectWord(word) {
   store.selectedWord = word;
   emit('nextTab', 5);
 } 
-
+function filter(type) {
+  filtertype.value = type;
+}
+// computed for common words
+const common_words = computed(() => {
+    const per_al_type = display.value.map((al) =>{
+      return al.words.map((word) => {
+        return word[0];
+      })
+    })
+    // get the words common to all alignment types
+    const common_words = per_al_type[0].filter((word) => {
+      return per_al_type.every((al) => {
+        return al.includes(word);
+      })
+    })
+    return common_words;
+})
 </script>
 
 <template>
@@ -75,9 +94,24 @@ function selectWord(word) {
     </form>
     </div>
   </div>
+  <div class="row">
+    <div class="col-1 text-start">
+    <p>Filters:</p>
+    </div>
+
+    </div>
+  <div class="row mb-3 align-items-center">
+    <div class="col-1">
+<div class="btn-group" role="group" aria-label="Basic mixed styles example">
+<button type="button" class="btn btn-danger" @click="filter('all')" :class="{ active: filtertype == 'all' }">None</button>
+<button type="button" class="btn btn-warning" @click="filter('common')" :class="{ active: filtertype == 'common' }">Common</button>
+<button type="button" class="btn btn-success" @click="filter('unique')" :class="{ active: filtertype == 'unique' }">Unique</button>
+</div>
+      </div>
+    </div>
     <div v-for="triple in chunkedArray" class="row mb-3">
   <div v-for="alignment in triple" class="col-4">
-    <MostShifted :alignmentName="alignment.name" :words="alignment.words" @select-word="selectWord"/>
+    <MostShifted :alignmentName="alignment.name" :words="alignment.words" :filter-type="filtertype" :common-words="common_words" @select-word="selectWord"/>
   </div>
 </div>
 </div>
