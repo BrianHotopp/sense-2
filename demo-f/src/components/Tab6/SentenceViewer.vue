@@ -108,7 +108,7 @@ watchEffect(async () => {
         <input type="text" class="form-control" id="target_word" v-model="formdata.target_word" placeholder="Enter target word">
         </div>
         <div class="col-sm-2">
-      <button type="button" class="btn btn-primary" @click="updateSettings(formdata)">Get Sentences</button>
+      <button type="button" class="btn btn-primary" @click.prevent="updateSettings(formdata)">Get Sentences</button>
           </div>
       </div>
       </form>
