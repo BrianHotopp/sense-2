@@ -17,6 +17,13 @@ fetch("/api/getPlainTexts", {
 onMounted(() => {
     getPlainTexts();
   });
+function ptClick(pt_id, pt_name) {
+  shiftPush(store.selectedPlaintexts, {id: pt_id, name: pt_name}, 2)
+  // deselect embeddings and alignments
+  store.selectedEmbeddings.elements = [];
+  store.selectedAlignments.elements = [];
+  store.selectedWord = null;
+}
 </script>
 
 <template>
@@ -45,7 +52,7 @@ onMounted(() => {
                       (pt) => pt.id
                     ).includes(pt.id),
                   }"
-                  @click.prevent="shiftPush(store.selectedPlaintexts, {id: pt.id, name: pt.name}, 2)"
+                  @click.prevent="ptClick(pt.id, pt.name)"
                 >
                   <div class="card-header">
                     <h6>

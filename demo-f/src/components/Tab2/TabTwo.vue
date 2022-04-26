@@ -37,6 +37,14 @@ fetch("/api/getEmbeddings", {
     });
 
 }
+function embeddingClick(tg, pl, sz){
+  shiftPush(tg, pl, sz);
+  // clear the selected alignments and word
+  store.selectedAlignments.elements = [];
+  store.selectedWord = null;
+
+
+}
 onMounted(() => {
   getEmbeddings();
 });
@@ -59,7 +67,7 @@ onMounted(() => {
                     v-for="e in embeddings_for_pt1"
                     :key="e.id"
                     class="list-group-item list-group-item-action"
-                    @click.prevent="shiftPush(store.selectedEmbeddings.forPt1, {id: e.id, name: e.name}, 1)"
+                    @click.prevent="embeddingClick(store.selectedEmbeddings.forPt1, {id: e.id, name: e.name}, 1)"
                     :class="{ active: store.selectedEmbeddings.forPt1.map((e) => e.id).includes(e.id) }"
                     href="#"
                   >
@@ -74,7 +82,7 @@ onMounted(() => {
                     class="list-group-item list-group-item-action"
                     v-for="e in embeddings_for_pt2"
                     :key="e.id"
-                    @click.prevent="shiftPush(store.selectedEmbeddings.forPt2, {id: e.id, name: e.name}, 1)"
+                    @click.prevent="embeddingClick(store.selectedEmbeddings.forPt2, {id: e.id, name: e.name}, 1)"
                     :class="{ active: store.selectedEmbeddings.forPt2.map((e) => e.id).includes(e.id) }"
                     href="#"
                   >
