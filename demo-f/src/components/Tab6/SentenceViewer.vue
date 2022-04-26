@@ -1,6 +1,7 @@
 <script setup>
-import { ref, watchEffect } from 'vue';
-
+import { ref, watchEffect, computed } from 'vue';
+import {store} from "../../store.js";
+import RandomSents from "./RandomSents.vue";
 const props = defineProps(["al"]);
 const displaydata = ref(null);
 const target_word = ref(null);
@@ -8,6 +9,9 @@ const formdata = ref({
     target_word: null,
     max_sentences: 10,
 });
+
+const firstctx = store.selectedPlaintexts.elements[0].name;
+const secondctx = store.selectedPlaintexts.elements[1].name;
 async function getSingleMostShiftedWord(al) {
     // returns the first most shifted word from the server for the alignment
     return await fetch("/api/getTopShiftedWords", {
@@ -113,10 +117,27 @@ watchEffect(async () => {
       </div>
       </form>
       <div v-if="displaydata != null">
+      <RandomSents :target_word="target_word" :al_id="props.al.id"/>
+      <div class="row">
+        <div class="col-sm-12">
+          <h5><u>Curated Sentence Pairs (Highest Cosine Distance)</u></h5>
+        </div>
+        </div>
       <div class="row" v-for="sentencepair in displaydata.sentences">
         <div class="col">
+          <div class="row">
+            <u>{{firstctx}}</u>
+          </div>
+          <div class="row">
           <p v-html="highlight(sentencepair[0], target_word)"></p>
+          </div>
+          <div class="row">
+            <u>{{secondctx}}</u>
+          </div>
+          <div class="row">
           <p v-html="highlight(sentencepair[1], target_word)"></p>
+          </div>
+
           <hr>
           </div>
         </div>
