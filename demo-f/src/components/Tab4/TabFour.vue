@@ -2,10 +2,11 @@
 
 import { ref, onMounted, watchEffect, computed } from 'vue'
 import MostShifted from "./MostShifted.vue"
+import {store} from "../../store.js";
 const display = ref([]);
 const numWords = ref(20);
 const props = defineProps(['selectedAlignments']);
-
+const emit = defineEmits(['nextTab']);
 function chunkArray(myArray, chunk_size) {
   var index = 0;
   var arrayLength = myArray.length;
@@ -48,7 +49,10 @@ display.value = props.selectedAlignments.map((al, i) => {
   }
 })
 })
-
+function selectWord(word) {
+  store.selectedWord = word;
+  emit('nextTab', 5);
+} 
 
 </script>
 
@@ -73,7 +77,7 @@ display.value = props.selectedAlignments.map((al, i) => {
   </div>
     <div v-for="triple in chunkedArray" class="row mb-3">
   <div v-for="alignment in triple" class="col-4">
-    <MostShifted :alignmentName="alignment.name" :words="alignment.words"/>
+    <MostShifted :alignmentName="alignment.name" :words="alignment.words" @select-word="selectWord"/>
   </div>
 </div>
 </div>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watchEffect, computed } from 'vue'
+import { ref, watchEffect, computed, onMounted } from 'vue'
 import {store} from '../../store.js';
 import NearestNeighborsList from './NearestNeighborsList.vue';
 import NearestNeighborsPlot from './NearestNeighborsPlot.vue';
@@ -72,6 +72,23 @@ async function getSingleMostShiftedWord(al) {
     }
     return data.shifted_words[0][0];
 })}
+// called on mount
+onMounted(() => {
+    // get the first most shifted word
+    if (store.selectedWord != null) {
+        target_word.value = store.selectedWord;
+        formdata.value.target_word = store.selectedWord;
+    } else {
+        getSingleMostShiftedWord(props.al).then((word) => {
+            target_word.value = word;
+            formdata.value.target_word = word;
+        })
+    }
+    // get the context for chosen word
+    getContext(props.al, target_word.value, first.value, num_neighbors.value).then((data) => {
+        displaydata.value = data;
+    })
+})
 function swapContext(){
     // fetch the new context
     let nfirst = first.value;
@@ -107,11 +124,6 @@ function fetchNewContext(){
     })
 }
 
-watchEffect(async () => {
-    target_word.value = await getSingleMostShiftedWord(props.al);
-    formdata.value.target_word = target_word.value;
-    fetchNewContext();
-})
 function updateSettings(new_settings){
     // update the settings
     getContext(props.al, new_settings.target_word, first.value, new_settings.num_neighbors).then((data) => {
@@ -127,7 +139,11 @@ function updateSettings(new_settings){
         num_neighbors.value = data.neighbors.length-1;
     })
 }
-
+function nnWordClick(word){
+    target_word.value = word;
+    formdata.value.target_word = word;
+    fetchNewContext();
+}
 </script>
 
 <template>
@@ -165,7 +181,7 @@ function updateSettings(new_settings){
     </div>
     <div class="row">
         <div class="col-6">
-        <NearestNeighborsList v-if="displaydata != null" :word="target_word" :neighbor-words="displaydata.neighbors"></NearestNeighborsList>
+        <NearestNeighborsList v-if="displaydata != null" :word="target_word" :neighbor-words="displaydata.neighbors" @select-word="nnWordClick"></NearestNeighborsList>
         </div>
         <div class="col-6">
         <div class="row">
