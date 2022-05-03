@@ -3,6 +3,8 @@ import { ref, onMounted } from 'vue';
 import {store} from '../../store.js';
 import {shiftPush} from '../../Queue.js';
 const ptexts = ref(null);
+const file_is_uploading = ref(false);
+const upload_succeeded = ref(false);
 function getPlainTexts(){
 fetch("/api/getPlainTexts", {
     method: "GET",
@@ -23,6 +25,42 @@ function ptClick(pt_id, pt_name) {
   store.selectedEmbeddings.elements = [];
   store.selectedAlignments.elements = [];
   store.selectedWord = null;
+}
+const chosenFile = ref(null);
+const newPtData = ref({name: null, description: null});
+function onFileChange(e) {
+  var files = e.target.files || e.dataTransfer.files;
+  if (!files.length)
+    return;
+  chosenFile.value = files[0];
+}
+async function setFalseAfterDelay(item, delay) {
+  setTimeout(() => {
+    item.value = false;
+  }, delay);
+}
+async function fileUpload() {
+  var formData = new FormData();
+  formData.append("file", chosenFile.value);
+  formData.append("data", JSON.stringify(newPtData.value));
+  file_is_uploading.value = true;
+  await fetch("/api/uploadFile", {
+    method: "POST",
+    body: formData,
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      // error handling
+      if (data.error) {
+        console.log("Failed to upload the file");
+        console.log(data.error);
+        return;
+      }
+    });
+  file_is_uploading.value = false;
+  getPlainTexts();
+  upload_succeeded.value = true;
+  setFalseAfterDelay(upload_succeeded, 3000);
 }
 </script>
 
@@ -66,6 +104,61 @@ function ptClick(pt_id, pt_name) {
               </a>
             </div>
           </div>
+            <div class="row">
+              <div class="col-12 mb-4">
+                <div class="d-flex justify-content-end">
+
+<!-- Button trigger modal -->
+<button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addPlaintextModal">
+  Add New Plaintext
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="addPlaintextModal" tabindex="-1" aria-labelledby="addPlaintextModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addPlaintextModalLabel">Add Plaintext</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="input-group mb-3">
+        <input type="file" class="form-control" id="inputGroupFile02" v-on:change="onFileChange">
+        <!-- inputs for the plaintext name and description -->
+        </div>
+          <input type="text" class="form-control mb-3" placeholder="Plaintext Name" v-model="newPtData.name">
+          <input type="text" class="form-control mb-3" placeholder="Plaintext Description" v-model="newPtData.description">
+          <div v-if="file_is_uploading" class="alert alert-secondary" role="alert">
+            File is uploading...
+          </div>
+          <div v-if="upload_succeeded" class="alert alert-success" role="alert">
+            A simple success alert—check it out!
+          </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" @click="fileUpload()">Upload</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+              </div>
+
+            </div>
+
         </div>
 </template>
 
