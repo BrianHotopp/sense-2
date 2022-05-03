@@ -7,23 +7,23 @@ const embeddings_for_pt1 = ref(null);
 const embeddings_for_pt2 = ref(null);
 
 const pt1embeddingForm = ref({
- id: null,
+ id: store.selectedPlaintexts.elements[0].id,
  name: null,
  description: null,
  settings: null
 });
 
 const pt2embeddingForm = ref({
- id: null,
+ id: store.selectedPlaintexts.elements[1].id,
  name: null,
- description: null
+ description: null,
  settings: null
 });
 
 function generateEmbedding(embeddingForm) {
 // hits the api to generate an embedding
 // returns the embedding id
-fetch("/api/embeddings", {
+fetch("/api/generateEmbedding", {
  method: "POST",
  headers: {
   "Content-Type": "application/json"
@@ -33,7 +33,8 @@ fetch("/api/embeddings", {
  if (data.error) {
   alert(data.error);
  } else {
- console.log(data);
+ // re-fetch the embeddings
+ getEmbeddings();
  }
 });
 }
@@ -73,7 +74,7 @@ function embeddingClick(tg, pl, sz) {
   // clear the selected alignments and word
   store.selectedAlignments.elements = [];
   store.selectedWord = null;
-}
+  }
 onMounted(() => {
   getEmbeddings();
 });
@@ -176,7 +177,28 @@ onMounted(() => {
                     aria-label="Close"
                   ></button>
                 </div>
-                <div class="modal-body">in the body of modal 1</div>
+                <div class="modal-body">
+		  <form>
+		    <div class="form-group mb-3">
+		      <label for="name">Name</label>
+		      <input
+			type="text"
+			class="form-control"
+			id="name"
+			v-model="pt1embeddingForm.name"
+		      />
+		    </div>
+		    <div class="form-group mb-3">
+		      <label for="description">Description</label>
+		      <input
+			type="text"
+			class="form-control"
+			id="description"
+			v-model="pt1embeddingForm.description"
+		      />
+		    </div>
+		  </form>
+		</div>
                 <div class="modal-footer">
                   <button
                     type="button"
@@ -233,7 +255,28 @@ onMounted(() => {
                     aria-label="Close"
                   ></button>
                 </div>
-                <div class="modal-body">in the body</div>
+                <div class="modal-body">
+		<form>
+		    <div class="form-group mb-3">
+		      <label for="name">Name</label>
+		      <input
+			type="text"
+			class="form-control"
+			id="name"
+			v-model="pt2embeddingForm.name"
+		      />
+		    </div>
+		    <div class="form-group mb-3">
+		      <label for="description">Description</label>
+		      <input
+			type="text"
+			class="form-control"
+			id="description"
+			v-model="pt2embeddingForm.description"
+		      />
+		    </div>
+		  </form>
+		</div>
                 <div class="modal-footer">
                   <button
                     type="button"
