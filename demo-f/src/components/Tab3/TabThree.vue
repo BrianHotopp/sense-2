@@ -11,8 +11,8 @@ function getAlignments() {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      e1_id: store.selectedPlaintexts.elements[0].id,
-      e2_id: store.selectedPlaintexts.elements[1].id,
+      e1_id: store.selectedEmbeddings.forPt1.elements[0].id,
+      e2_id: store.selectedEmbeddings.forPt2.elements[0].id,
     }),
   })
     .then((res) => res.json())
