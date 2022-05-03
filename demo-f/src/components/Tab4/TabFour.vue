@@ -24,6 +24,14 @@ const chunkedArray = computed(() => {
   return chunkArray(display.value, 3);
 });
 watchEffect(async () => {
+  // if numwords is between 1 and 100, don't do anything
+  if (numWords.value < 1 || numWords.value > 100) {
+    return;
+  }
+  // if numwords is not an integer, don't do anything
+  if (numWords.value % 1 !== 0) {
+    return;
+  }
   const promises = props.selectedAlignments.map(async (al) => {
     const ret = await fetch("/api/getTopShiftedWords", {
     method: "POST",
@@ -48,8 +56,19 @@ display.value = props.selectedAlignments.map((al, i) => {
     id: al.id,
     name: al.name,
     words: data[i].shifted_words,
+    unionWords: []
   }
 })
+// attach the union of the other alignment's words to the element for the current alignment
+display.value.forEach((al, i) => {
+  // union the other alignment's words to the element for the current alignment
+  display.value.forEach((other_al, j) => {
+    if (i != j) {
+      const o_words = other_al.words.map((w) => w[0]);
+      al.unionWords = al.unionWords.concat(o_words);
+    }
+  })
+});
 })
 function selectWord(word) {
   store.selectedWord = word;
@@ -85,6 +104,8 @@ const common_words = computed(() => {
       <label class="mb-3" for="numWords">Number of words to display:</label>
       <input
         type="number"
+        min=1
+        max=100
         class="form-control"
         id="numWords"
         v-model="numWords"
@@ -111,7 +132,7 @@ const common_words = computed(() => {
     </div>
     <div v-for="triple in chunkedArray" class="row mb-3">
   <div v-for="alignment in triple" class="col-4">
-    <MostShifted :alignmentName="alignment.name" :words="alignment.words" :filter-type="filtertype" :common-words="common_words" @select-word="selectWord"/>
+    <MostShifted :alignmentName="alignment.name" :words="alignment.words" :filter-type="filtertype" :common-words="common_words" :union-words="alignment.unionWords" @select-word="selectWord"/>
   </div>
 </div>
 </div>

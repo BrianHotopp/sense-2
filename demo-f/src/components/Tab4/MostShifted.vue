@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 
 const props = defineProps(
-    ["alignmentName","words", "filterType", "commonWords"]
+    ["alignmentName","words", "filterType", "commonWords", "unionWords"]
 )
 
 // computed for filtered words
@@ -14,7 +14,7 @@ const filteredWords = computed(() => {
     } else if (props.filterType === "unique") {
       // get words that are unique to this alignment
       return props.words.filter((word) => {
-        return !props.commonWords.includes(word[0]);
+        return !props.unionWords.includes(word[0]);
       })
     } else {
         return props.words;
