@@ -7,10 +7,8 @@ const props = defineProps(
 
 // computed for filtered words
 const filteredWords = computed(() => {
-  console.log(props.commonWords)
     if (props.filterType=== "common") {
         return props.words.filter((word) => {
-          console.log("word: ", word)
             return props.commonWords.includes(word[0]);
         })
     } else if (props.filterType === "unique") {
