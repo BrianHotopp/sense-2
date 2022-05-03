@@ -1,34 +1,33 @@
 <script setup>
-import { ref } from 'vue'
+import { ref } from "vue";
 
-const props = defineProps(
-    ["word", "neighborWords"]
-)
+const props = defineProps(["word", "neighborWords"]);
 </script>
 
 <template>
-    <div>
+  <div>
     <h5 style="text-align: left">
-           Nearest Neighbors of <b>"{{word}}"</b>
+      Nearest Neighbors of <b>"{{ word }}"</b>
     </h5>
     <table class="table table-striped">
-  <thead>
-    <tr>
-      <th scope="col">#</th>
-      <th scope="col">Word</th>
-      <th scope="col">Distance (Euclidean)</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr v-for="(word, index) in neighborWords.slice(0, -1)" :key="index">
-      <th scope="row">{{index+1}}</th>
-      <td><a href="#!" @click="$emit('selectWord', word[0])">{{word[0]}}</a></td>
-      <td>{{word[1].toFixed(2)}}</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Word</th>
+          <th scope="col">Distance (Euclidean)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(word, index) in neighborWords.slice(0, -1)" :key="index">
+          <th scope="row">{{ index + 1 }}</th>
+          <td>
+            <a href="#!" @click="$emit('selectWord', word[0])">{{ word[0] }}</a>
+          </td>
+          <td>{{ word[1].toFixed(2) }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

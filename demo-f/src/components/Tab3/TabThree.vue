@@ -1,12 +1,11 @@
 <script setup>
-import { ref, onMounted, reactive } from 'vue';
-import {store } from '../../store.js';
-import {togglePush} from '../../Queue.js';
+import { ref, onMounted, reactive } from "vue";
+import { store } from "../../store.js";
+import { togglePush } from "../../Queue.js";
 const alignments = ref(null);
 
-
 function getAlignments() {
-    fetch("/api/getAlignments", {
+  fetch("/api/getAlignments", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -20,10 +19,11 @@ function getAlignments() {
     .then((data) => {
       // set the alignments to the data alignments
       alignments.value = data.alignments;
-    });}
-    onMounted(() => {
-      getAlignments();
     });
+}
+onMounted(() => {
+  getAlignments();
+});
 </script>
 
 <template>
@@ -45,14 +45,16 @@ function getAlignments() {
           <div
             class="card"
             :class="{
-              'text-white': store.selectedAlignments.map((a) => a.id).includes(
-                a.id
-              ),
-              'bg-primary': store.selectedAlignments.map((a) => a.id).includes(
-                a.id
-              )
+              'text-white': store.selectedAlignments
+                .map((a) => a.id)
+                .includes(a.id),
+              'bg-primary': store.selectedAlignments
+                .map((a) => a.id)
+                .includes(a.id),
             }"
-            @click.prevent="togglePush(store.selectedAlignments, {id: a.id, name: a.name})"
+            @click.prevent="
+              togglePush(store.selectedAlignments, { id: a.id, name: a.name })
+            "
           >
             <div class="card-header">
               <h6>
