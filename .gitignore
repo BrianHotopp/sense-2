@@ -33,7 +33,8 @@ node_modules
 dist
 dist-ssr
 *.local
-
+# scratch files
+scratch.txt
 # Logs
 logs
 *.log

@@ -280,9 +280,12 @@ def generate_embedding():
     # check to see if the request has a description
     if "description" not in d:
         return jsonify({"error": "No description in the request"}), 400
+    if "embeddingType" not in d:
+        return jsonify({"error": "No embedding type in the request"}), 400
     pt_id = d["id"]
     e_name = d["name"]
     e_description = d["description"]
+    embedding_type = d["embeddingType"]
     # if the provided file id is not in the database
     pt = query_db("SELECT t_path FROM plaintexts WHERE id = ?", (pt_id,), one=True)
     if pt is None:
@@ -290,12 +293,28 @@ def generate_embedding():
     # get the path to the tokenized plaintext from the database response
     pt_p = pt["t_path"]
     pt_po = Path(pt_p)
-    # generate the embedding
-    wv = embed.generate_embedding(pt_po)
+    # generate the embedding according to the supplied embedding type
+    if embedding_type == "word2vec":
+        # attempt to extract the settings from the request
+        if "settings" not in d:
+            return jsonify({"error": "No settings in the request"}), 400
+        # read settings and convert to dict
+        settings = d["settings"]
+        # unpack the settings
+        if "size" not in settings:
+            return jsonify({"error": "No window size in the settings"}), 400
+        if "window" not in settings:
+            return jsonify({"error": "No min count in the settings"}), 400
+        if "minCount" not in settings:
+            return jsonify({"error": "No min count in the settings"}), 400
+        wv = embed.w2v_embed(pt_po, int(settings["size"]), int(settings["window"]), int(settings["minCount"]))
+    else:
+        return jsonify({"error": "Invalid embedding type"}), 400
     # generate a random filename for the embedding
     e_fn = Path(str(uuid.uuid4()) + ".txt")
     e_path = Path(app.config["EMBEDDINGS_FOLDER"]) / e_fn
     wv.to_file(e_path)
+    print("embedding saved to: " + str(e_path))
     # create entry in embeddings for the embedding, return the id
     e_id = write_db_ret_last(
         "INSERT INTO embeddings (name, description, pt_id, wv_path) VALUES (?, ?, ?, ?)",

@@ -2,7 +2,8 @@
 import { onMounted, ref } from "vue";
 import { store } from "../../store.js";
 import { shiftPush } from "../../Queue.js";
-
+import { availableEmbeddings, selectedEmbedding } from "../../embeddingConfigs.js";	
+import EmbeddingSettings from "./EmbeddingSettings.vue";
 const embeddings_for_pt1 = ref(null);
 const embeddings_for_pt2 = ref(null);
 
@@ -10,6 +11,7 @@ const pt1embeddingForm = ref({
  id: store.selectedPlaintexts.elements[0].id,
  name: null,
  description: null,
+ embeddingType: null,
  settings: null
 });
 
@@ -17,12 +19,20 @@ const pt2embeddingForm = ref({
  id: store.selectedPlaintexts.elements[1].id,
  name: null,
  description: null,
+ embeddingType: null,
  settings: null
 });
 
 function generateEmbedding(embeddingForm) {
+// error if name or description is empty
+if (embeddingForm.name === null || embeddingForm.description === null) {
+	alert("Please enter a name and description for the embedding.");
+	return;
+}
 // hits the api to generate an embedding
 // returns the embedding id
+embeddingForm.settings = availableEmbeddings[selectedEmbedding.embedding];
+embeddingForm.embeddingType = selectedEmbedding.embedding;
 fetch("/api/generateEmbedding", {
  method: "POST",
  headers: {
@@ -180,7 +190,7 @@ onMounted(() => {
                 <div class="modal-body">
 		  <form>
 		    <div class="form-group mb-3">
-		      <label for="name">Name</label>
+		      <label class="d-flex justify-content-start" for="name">Name</label>
 		      <input
 			type="text"
 			class="form-control"
@@ -189,13 +199,16 @@ onMounted(() => {
 		      />
 		    </div>
 		    <div class="form-group mb-3">
-		      <label for="description">Description</label>
+		      <label class="d-flex justify-content-start" for="description">Description</label>
 		      <input
 			type="text"
 			class="form-control"
 			id="description"
 			v-model="pt1embeddingForm.description"
 		      />
+		    </div>
+		    <div class="form-group mb-3">
+		   	<EmbeddingSettings></EmbeddingSettings>
 		    </div>
 		  </form>
 		</div>
@@ -275,6 +288,10 @@ onMounted(() => {
 			v-model="pt2embeddingForm.description"
 		      />
 		    </div>
+		    <div class="form-group mb-3">
+		   	<EmbeddingSettings></EmbeddingSettings>
+		    </div>
+
 		  </form>
 		</div>
                 <div class="modal-footer">

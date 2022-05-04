@@ -82,7 +82,7 @@ onMounted(() => {
       </div>
     </div>
     <div class="row">
-      <div class="col-12">
+      <div class="col-12 mb-3">
         <p>
           <button
             type="button"
