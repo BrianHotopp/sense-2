@@ -31,14 +31,39 @@ tf.random.set_seed(1)
 
 
 class S4AlignConfig:
-    def __init__(self, name="unnamed"):
-        self._name = name
+    def __init__(self,
+    cls_model="nn",
+    iters=100,
+    n_targets=10,
+    n_negatives=10,
+    fast=True,
+    rate=0,
+    t=0.5,
+    t_overlap=1,
+    landmarks=None,
+    update_landmarks=True
+):
+        self.cls_model = cls_model
+        self.iters = int(iters)
+        self.n_targets = int(n_targets)
+        self.n_negatives = int(n_negatives)
+        self.fast = int(fast)
+        self.rate = float(rate)
+        self.t = float(t)
+        self.t_overlap = float(t_overlap)
+        self.landmarks = landmarks
+        self.update_landmarks = update_landmarks
 
     def align(self, wv1, wv2):
         """
         aligns wv1 to wv2 using orthogonal procrustes with anchors chosen by s4
         """
-        landmarks, non_landmarks, Q = s4(wv1, wv2)
+        landmarks, non_landmarks, Q = s4(wv1, wv2, cls_model=self.cls_model,
+                                         iters=self.iters, n_targets=self.n_targets,
+                                         n_negatives=self.n_negatives, fast=self.fast,
+                                         rate=self.rate, t=self.t, t_overlap=self.t_overlap,
+                                         landmarks=self.landmarks,
+                                         update_landmarks=self.update_landmarks)
         _wv1vec = np.matmul(wv1.vectors, Q)
         _wv1 = WordVectors(wv1.get_words(), _wv1vec)
         return _wv1, wv2, Q
@@ -322,7 +347,7 @@ def s4(
 
     avg_window = 0  # number of iterations to use in running average
 
-    ga = GlobalAlignConfig("dummy")
+    ga = GlobalAlignConfig()
     # Begin alignment
     if update_landmarks:
         # Check if landmarks is initialized

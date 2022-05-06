@@ -7,9 +7,18 @@ from .global_align import GlobalAlignConfig
 # Noise-Aware alignment of word embeddings
 # Source: https://github.com/NoaKel/Noise-Aware-Alignment
 class NoiseAwareAlignConfig:
-    def __init__(self, name="unnamed", is_soft=True):
-        self._name = name
+    def __init__(self, is_soft=True):
         self._is_soft = is_soft
+    cls_model="nn",
+    iters=100,
+    n_targets=10,
+    n_negatives=10,
+    fast=True,
+    rate=0,
+    t=0.5,
+    t_overlap=1,
+    landmarks=None,
+
 
     def align(self, wv1, wv2):
         """

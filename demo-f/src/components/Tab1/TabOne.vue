@@ -128,7 +128,7 @@ async function fileUpload() {
               <div class="modal-content">
                 <div class="modal-header">
                   <h5 class="modal-title" id="addPlaintextModalLabel">
-                    Add Plaintext
+                    Add Dataset 
                   </h5>
                   <button
                     type="button"
@@ -171,7 +171,7 @@ async function fileUpload() {
                     class="alert alert-success"
                     role="alert"
                   >
-                    A simple success alert—check it out!
+		  Plaintext Upload Successful
                   </div>
                 </div>
                 <div class="modal-footer">

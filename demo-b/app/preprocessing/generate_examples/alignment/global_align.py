@@ -7,7 +7,6 @@ from app.preprocessing.WordVectors import WordVectors
 class GlobalAlignConfig:
     def __init__(
         self,
-        name="unnamed",
         anchor_indices=None,
         anchor_top=None,
         anchor_bot=None,
@@ -18,13 +17,14 @@ class GlobalAlignConfig:
         """
         initializes a global alignment config
         """
-        self._name = name
         self._anchor_indices = anchor_indices
         self._anchor_top = anchor_top
         self._anchor_bot = anchor_bot
         self._anchor_random = anchor_random
         self._anchor_words = anchor_words
         self._exclude = set(exclude)
+        # print anchor_indices
+        print("initialized with anchor_indices:", anchor_indices)
 
     def add_excludes(self, words_to_exclude: set[str]):
         """

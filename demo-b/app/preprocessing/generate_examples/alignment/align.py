@@ -78,7 +78,7 @@ class Alignment:
         return words, distances, vectors, iv
 
     @staticmethod
-    def from_wv_and_config(wv1, wv2, config_dict):
+    def from_wv_and_config(wv1, wv2, atype, config_dict):
         """
         generates an alignment object from wv1 and wv2
         assumes the embeddings have already been intersected
@@ -86,7 +86,11 @@ class Alignment:
         wv2: WordVectors object
         config_dict: dict() of the config for the alignment
         """
-        cfg_obj = Alignment.config_from_dict(config_dict)
+        # print the atype and config_dict
+        print("atype:", atype)
+        print("config_dict:", config_dict)
+
+        cfg_obj = Alignment.config_from_dict(atype, config_dict)
         # intersect wv1, wv2
         wv1, wv2 = WordVectors.intersect(wv1, wv2)
         wv1_aligned, _, Q = cfg_obj.align(wv1, wv2)
@@ -101,18 +105,17 @@ class Alignment:
         return Alignment(common, v1, v2, shifts, dists, Q)
 
     @staticmethod
-    def config_from_dict(config_dict):
+    def config_from_dict(atype, args):
         """
         Generate an alignment configuration
         config_json: dict() of the alignment configuration
         returns: AlignmentConfig object
         """
-        args = config_dict["args"]
-        if config_dict["alignment_type"] == "s4":
+        if atype == "s4":
             return S4AlignConfig(**args)
-        elif config_dict["alignment_type"] == "global":
+        elif atype == "global":
             return GlobalAlignConfig(**args)
-        elif config_dict["alignment_type"] == "noise-aware":
+        elif atype == "noise-aware":
             return NoiseAwareAlignConfig(**args)
         else:
             raise ValueError("Unknown alignment type encountered in config")

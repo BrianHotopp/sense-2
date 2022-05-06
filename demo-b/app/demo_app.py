@@ -147,7 +147,7 @@ app.config["Q_FOLDER"] = Q_FOLDER
 
 CORS(app, resources={r"/*": {"origins": "*"}})
 # uncomment this line to reset the db on app start
-#clean_start()
+clean_start()
 
 
 @app.teardown_appcontext
@@ -331,11 +331,34 @@ def generate_alignment():
     """
     # get request json
     d = request.get_json()
+    # check the request has the correct keys (e1_id, e2_id, name, description, alignmentType, settings)
+    if "e1_id" not in d:
+        return jsonify({"error": "No e1_id in the request"}), 400
+    if "e2_id" not in d:
+        return jsonify({"error": "No e2_id in the request"}), 400
+    if "name" not in d:
+        return jsonify({"error": "No name in the request"}), 400
+    if "description" not in d:
+        return jsonify({"error": "No description in the request"}), 400
+    if "alignmentType" not in d:
+        return jsonify({"error": "No alignmentType in the request"}), 400
+    if "settings" not in d:
+        return jsonify({"error": "No settings in the request"}), 400    
+    # unpack the request
     e1_id = max(d["e1_id"], d["e2_id"])
     e2_id = min(d["e1_id"], d["e2_id"])
     name = d["name"]
     description = d["description"]
-    config = d["config"]
+    alignment_type = d["alignmentType"]
+    config = d["settings"]
+    # print the values
+    print("e1_id: " + str(e1_id))
+    print("e2_id: " + str(e2_id))
+    print("name: " + name)
+    print("description: " + description)
+    print("alignment_type: " + alignment_type)
+    print("settings: " + str(config))
+    
     # if the embedding ids are the same
     if e1_id == e2_id:
         return jsonify({"error": "Cannot align embeddings with themselves"}), 400
@@ -356,7 +379,10 @@ def generate_alignment():
     # get the words and vectors for the second alignment
 
     # generate the alignment (computes the two alignment matrices, the shifts, and the distances)
-    a = Alignment.from_wv_and_config(wv1, wv2, config)
+    try:
+        a = Alignment.from_wv_and_config(wv1, wv2, alignment_type, config)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     # dump the common words to disk
     c_fn = Path(str(uuid.uuid4()) + ".pickle")
     c_path = Path(app.config["COMMON_WORDS_FOLDER"]) / c_fn
