@@ -548,7 +548,7 @@ def get_top_shifted_words():
         return jsonify({"message": str(e)}), 400
 
     
-    return jsonify({"message": "Top shifted words retrieved", "shifted_words": ts}), 200
+    return jsonify({"message": "Top shifted words retrieved", "shifted_words": ts, "alignment_id": a_id}), 200
 
 @app.route("/getRandomSentence", methods=["POST"])
 def get_random_sentence():
