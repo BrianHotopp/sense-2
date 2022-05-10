@@ -253,6 +253,8 @@ function nnWordClick(word) {
               :word="target_word"
               :neighbor-words="displaydata.neighbors"
               :neighbor-coords="displaydata.vectors"
+	      :context1="firstctx"
+	      :context2="secondctx"
             ></NearestNeighborsPlot>
           </div>
         </div>
