@@ -16,7 +16,6 @@ from app.preprocessing.generate_examples.alignment.align import Alignment
 from preprocessing.WordVectors import WordVectors
 from flask_cors import CORS
 from pathlib import Path
-
 DATABASE = "app/db/demo_app.db"
 UPLOAD_FOLDER = "app/artifacts/uploads"
 SCRUBBED_FOLDER = "app/artifacts/scrubbed"
@@ -35,35 +34,55 @@ sqlite3.register_adapter(np.float64, float)
 def clean_start():
     # reset the database
     init_db()
-    # delete all files in the uploads folder
-    for f in Path(UPLOAD_FOLDER).glob("*"):
-        f.unlink()
-    # delete all files in the scrubbed folder
-    for f in Path(SCRUBBED_FOLDER).glob("*"):
-        f.unlink()
-    # delete all files in the occurrences folder
+    # delete all files in the uploads folder, preserving gitignore
+    for file in Path(UPLOAD_FOLDER).glob("*"):
+        if file.name == ".gitignore":
+            continue
+        file.unlink()
+    # delete all files in the scrubbed folder, preserving gitignore
+    for file in Path(SCRUBBED_FOLDER).glob("*"):
+        if file.name == ".gitignore":
+            continue
+        file.unlink()
+    # delete all files in the occurrences folder, preserving gitignore
     for f in Path(OCCURRENCES_FOLDER).glob("*"):
+        if f.name == ".gitignore":
+            continue
         f.unlink()
-    # delete all files in the tokenized folder
+    # delete all files in the tokenized folder, preserving gitignore
     for f in Path(TOKENIZED_FOLDER).glob("*"):
+        if f.name == ".gitignore":
+            continue
         f.unlink()
-    # delete all files in the embeddings folder
+    # delete all files in the embeddings folder, preserving gitignore
     for f in Path(EMBEDDINGS_FOLDER).glob("*"):
+        if f.name == ".gitignore":
+            continue
         f.unlink()
-    # delete all files in the common words folder
+    # delete all files in the common words folder, preserving gitignore
     for f in Path(COMMON_WORDS_FOLDER).glob("*"):
+        if f.name == ".gitignore":
+            continue
         f.unlink()
-    # delete all files in the aligned embeddings folder
+    # delete all files in the aligned embeddings folder, preserving gitignore
     for f in Path(ALIGNED_EMBEDDINGS_FOLDER).glob("*"):
+        if f.name == ".gitignore":
+            continue
         f.unlink()
-    # delete all files in the shifts folder
+    # delete all files in the shifts folder, preserving gitignore
     for f in Path(SHIFTS_FOLDER).glob("*"):
+        if f.name == ".gitignore":
+            continue
         f.unlink()
-    # delete all files in the distances folder
+    # delete all files in the distances folder, preserving gitignore
     for f in Path(DISTANCES_FOLDER).glob("*"):
+        if f.name == ".gitignore":
+            continue
         f.unlink()
-    # delete all files in the Q folder
+    # delete all files in the Q folder, preserving gitignore
     for f in Path(Q_FOLDER).glob("*"):
+        if f.name == ".gitignore":
+            continue
         f.unlink()
 
 
@@ -134,6 +153,10 @@ def query_db(query, args=(), one=False):
 
 
 app = Flask(__name__)
+# load some config from prefixed environment variables
+# atm this is just the CLEAN_START flag
+app.config.from_prefixed_env()
+# remaining config
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["SCRUBBED_FOLDER"] = SCRUBBED_FOLDER
 app.config["OCCURRENCES_FOLDER"] = OCCURRENCES_FOLDER
@@ -146,8 +169,9 @@ app.config["DISTANCES_FOLDER"] = DISTANCES_FOLDER
 app.config["Q_FOLDER"] = Q_FOLDER
 
 CORS(app, resources={r"/*": {"origins": "*"}})
-# uncomment this line to reset the db on app start
-clean_start()
+
+if app.config["CLEAN_START"]:
+    clean_start()
 
 
 @app.teardown_appcontext
