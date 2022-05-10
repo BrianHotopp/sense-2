@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from "vue";
-const props = defineProps(["word", "neighborWords", "neighborCoords"]);
+const props = defineProps(["word", "neighborWords", "neighborCoords", "context1", "context2"]);
 const option = computed(() => {
   const tdata = props.neighborCoords.map((v, i) =>
     v.concat(props.neighborWords[i][0])
@@ -16,10 +16,18 @@ const option = computed(() => {
         return param.data[2];
       },
     },
+    legend: {
+    type: "plain",
+    bottom: 10,
+    left:30,
+    selectedMode: false,
+    },
     series: [
       {
+
         symbolSize: 15,
         data: wdata,
+	name: props.context1,
         type: "scatter",
         label: {
           show: true,
@@ -33,6 +41,7 @@ const option = computed(() => {
       {
         symbolSize: 15,
         data: cdata,
+	name: props.context2,
         type: "scatter",
         label: {
           show: true,
