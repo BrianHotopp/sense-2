@@ -49,7 +49,15 @@ const nextDisabled = computed(() => ({
 const prevDisabled = computed(() => ({
   disabled: active_tab.value === 0,
 }));
-</script>
+
+// text top right to display the plaintexts selected
+const plaintexts_selected = computed(() => {
+  if (store.selectedPlaintexts.length === 2 && active_tab.value != 0) {
+    return "Comparing " + "<b>" + store.selectedPlaintexts.elements[0].name + "</b>" + " and " + "<b>" + store.selectedPlaintexts.elements[1].name + "</b>";
+  } 
+  return null;
+});
+  </script>
 <template>
   <div class="d-flex flex-column h-100">
     <div class="flex-shrink-0">
@@ -157,7 +165,11 @@ const prevDisabled = computed(() => ({
                 </li>
               </ul>
             </div>
+
+	  <!--navbar element top right-->
+	  	<div v-if="plaintexts_selected != null" class="me-3" v-html="plaintexts_selected"></div>
           </div>
+
         </nav>
       </div>
       <TabZero v-if="active_tab == 0" />
