@@ -54,7 +54,7 @@ watchEffect(async () => {
     return {
       id: al.id,
       name: al.name,
-      words: data[i].shifted_words,
+      words: data.find((d) => d.alignment_id === al.id).shifted_words,
       unionWords: [],
     };
   });
