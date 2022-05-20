@@ -520,7 +520,6 @@ def s4(
             non_landmarks = [
                 wv1.get_word(i) for i in range(len(wv1.words)) if predict_real[i] > t
             ]
-            verbose_print("Updated landmarks:", landmarks[0:10])
 
         # Update landmark overlap using Jaccard Index
         isect_ab = set.intersection(prev_landmarks, set(landmarks))
