@@ -64,8 +64,10 @@ class S4AlignConfig:
                                          rate=self.rate, t=self.t, t_overlap=self.t_overlap,
                                          landmarks=self.landmarks,
                                          update_landmarks=self.update_landmarks)
-        _wv1vec = np.matmul(wv1.vectors, Q)
-        _wv1 = WordVectors(wv1.get_words(), _wv1vec)
+        # global align config
+        ga = GlobalAlignConfig()
+        ga._anchor_words = landmarks
+        _wv1, wv2, Q = ga.align(wv1, wv2)
         return _wv1, wv2, Q
 
 
@@ -367,7 +369,7 @@ def s4(
         non_landmarks = [w for w in wv1.get_words() if w not in landmark_set]
     # modify the global alignment config to use the landmarks we found
 
-    ga.anchor_words = landmarks
+    ga._anchor_words = landmarks
     # align
     wv1, wv2, Q = ga.align(wv1, wv2)
     if cls_model == "nn":
@@ -409,7 +411,7 @@ def s4(
             # Make targets deterministic
             # targets = non_landmarks
         else:
-            targets = np.random.choice(wv1.words, n_targets)
+            targets = np.random.choice(wv1.get_words(), n_targets)
 
         for target in targets:
 
@@ -478,8 +480,6 @@ def s4(
 
         # Begin training of neural network
         if cls_model == "nn":
-            print("training")
-            print("dset size:", len(x_train))
             history = model.train_on_batch(x_train, y_train, reset_metrics=False)
             # history = model.fit(x_train, y_train, epochs=5, verbose=0)
             # history = [history.history["loss"][0]]
@@ -520,6 +520,7 @@ def s4(
             non_landmarks = [
                 wv1.get_word(i) for i in range(len(wv1.words)) if predict_real[i] > t
             ]
+            verbose_print("Updated landmarks:", landmarks[0:10])
 
         # Update landmark overlap using Jaccard Index
         isect_ab = set.intersection(prev_landmarks, set(landmarks))
@@ -546,7 +547,8 @@ def s4(
             ),
             end="\r",
         )
-        ga.landmarks = landmarks
+        ga._anchor_words = landmarks
+        
         wv1, wv2_original, Q = ga.align(wv1, wv2_original)
 
         # Check if overlap difference is below threhsold
